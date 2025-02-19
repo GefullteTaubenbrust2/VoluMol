@@ -18,48 +18,12 @@
 
 namespace fgr {
 	namespace Texture {
-		TextureHandle dither0, dither1;
 		void bindTextureID(uint id, TextureUnit unit) {
 			graphics_check_external();
 			glActiveTexture(UNIT_ENUM_TO_GL_UNIT(unit));
 			glBindTexture(GL_TEXTURE_2D, id);
 			graphics_check_error();
 		}
-	}
-
-	void init_default_textures() {
-		char d0[16] = {
-			 0,  8,  2, 10,
-			12,  4, 14,  6,
-			 3, 11,  1,  9,
-			15,  7, 13,  5,
-		};
-		char d1[16] = {
-			 0,  8,  2, 10,
-			 4, 12,  6, 14,
-			11,  1,  9,  3,
-			15,  5, 13,  7,
-		};
-		Texture::dither0.data.resize(64);
-		Texture::dither1.data.resize(64);
-		Texture::dither0.width = 4;
-		Texture::dither0.height = 4;
-		Texture::dither1.width = 4;
-		Texture::dither1.height = 4;
-		for (int i = 0; i < 16; ++i) {
-			Texture::dither0.data[i * 4] = d0[i];
-			Texture::dither0.data[i * 4 + 1] = d0[i];
-			Texture::dither0.data[i * 4 + 2] = d0[i];
-			Texture::dither0.data[i * 4 + 3] = 0;
-
-			Texture::dither1.data[i * 4] = d1[i];
-			Texture::dither1.data[i * 4 + 1] = d1[i];
-			Texture::dither1.data[i * 4 + 2] = d1[i];
-			Texture::dither1.data[i * 4 + 3] = 0;
-		}
-
-		Texture::dither0.createBuffer(GL_REPEAT, GL_NEAREST);
-		Texture::dither1.createBuffer(GL_REPEAT, GL_NEAREST);
 	}
 
 	TextureHandle::TextureHandle(int width, int height, int bytes_per_pixel, u8* data) :

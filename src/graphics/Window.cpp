@@ -41,8 +41,6 @@ namespace fgr {
 
 	void init_shader_defaults();
 
-	void init_default_textures();
-
 	namespace window {
 		int width, height;
 		RenderTarget framebuffer;
@@ -124,7 +122,6 @@ namespace fgr {
 			timer.reset();
 
 			init_shader_defaults();
-			init_default_textures();
 
 			glfw_window = window;
 

@@ -6,6 +6,8 @@
 
 #include "Window.h"
 
+std::string executable_path = "";
+
 namespace fgr {
 	Shader Shader::basic, Shader::basic_instanced, Shader::line, Shader::line_instanced, Shader::textured, Shader::textured_instanced, Shader::sprites_instanced, Shader::sprites_instanced_depth;
 
@@ -33,7 +35,7 @@ namespace fgr {
 		graphics_check_external();
 
 		std::ifstream stream;
-		stream.open(vertex_path, std::ios::ate | std::ios::binary);
+		stream.open(executable_path + vertex_path, std::ios::ate | std::ios::binary);
 		stream.seekg(0, std::ios::end);
 		uint size = stream.tellg();
 		stream.seekg(0, std::ios::beg);
@@ -56,7 +58,7 @@ namespace fgr {
 		stream.close();
 		delete[] vertex_src;
 
-		stream.open(fragment_path, std::ios::ate | std::ios::binary);
+		stream.open(executable_path + fragment_path, std::ios::ate | std::ios::binary);
 		stream.seekg(0, std::ios::end);
 		size = stream.tellg();
 		stream.seekg(0, std::ios::beg);
@@ -107,7 +109,7 @@ namespace fgr {
 		graphics_check_external();
 
 		std::ifstream stream;
-		stream.open(vertex_path, std::ios::ate | std::ios::binary);
+		stream.open(executable_path + vertex_path, std::ios::ate | std::ios::binary);
 		stream.seekg(0, std::ios::end);
 		uint size = stream.tellg();
 		stream.seekg(0, std::ios::beg);
@@ -130,7 +132,7 @@ namespace fgr {
 		stream.close();
 		delete[] vertex_src;
 
-		stream.open(fragment_path, std::ios::ate | std::ios::binary);
+		stream.open(executable_path + fragment_path, std::ios::ate | std::ios::binary);
 		stream.seekg(0, std::ios::end);
 		size = stream.tellg();
 		stream.seekg(0, std::ios::beg);
@@ -151,7 +153,7 @@ namespace fgr {
 		stream.close();
 		delete[] fragment_src;
 
-		stream.open(geometry_path, std::ios::ate | std::ios::binary);
+		stream.open(executable_path + geometry_path, std::ios::ate | std::ios::binary);
 		stream.seekg(0, std::ios::end);
 		size = stream.tellg();
 		stream.seekg(0, std::ios::beg);
