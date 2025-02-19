@@ -20,6 +20,8 @@
 #define DLLEXPORT extern "C" 
 #endif
 
+extern std::string executable_path;
+
 DLLEXPORT void test() {
 GLFWwindow* window;
 
@@ -69,6 +71,10 @@ namespace mol {
 
 glm::vec3 vec3FromFloats(float* floats, uint offset) {
 	return glm::vec3(floats[3 * offset], floats[1 + 3 * offset], floats[2 + 3 * offset]);
+}
+
+DLLEXPORT void pySetPath(char const* path) {
+	executable_path = path;
 }
 
 DLLEXPORT void pyCreateWindow() {
