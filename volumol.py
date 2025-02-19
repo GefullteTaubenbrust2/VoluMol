@@ -1,7 +1,10 @@
 import ctypes
 import os
+import pathlib
 
-__library = ctypes.cdll.LoadLibrary(os.path.abspath("VoluMol.so"))
+__VOLUMOL_PATH = os.path.dirname(__file__) + "/"
+
+__library = ctypes.cdll.LoadLibrary(__VOLUMOL_PATH + "VoluMol.so")
 
 __library.pyLoadMoldenFile.argtypes = [ctypes.c_char_p]
 __library.pyLoadXYZFile.argtypes = [ctypes.c_char_p]
@@ -18,6 +21,9 @@ __library.pyGetCameraOrientation.argtypes = [ctypes.POINTER(ctypes.c_float), cty
 __library.pyElementProperties.argtypes = [ctypes.c_int, ctypes.c_float, ctypes.c_float, ctypes.c_float, ctypes.c_float, ctypes.c_float]
 __library.pyUpdateSettings.argtypes = [ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_bool)]
 __library.pySaveImage.argtypes = [ctypes.c_char_p, ctypes.c_int, ctypes.c_int]
+__library.pySetPath.argtypes = [ctypes.c_char_p]
+
+__library.pySetPath(__VOLUMOL_PATH.encode("utf-8"))
 
 class Settings:
     size_factor = 0.2
@@ -56,7 +62,7 @@ class Settings:
     ao_iterations = 16
 
     smooth_bonds = False
-    premulitply_color = True
+    premultiply_color = True
     cubemap_use_gpu = True
     orthographic = False
 
@@ -208,7 +214,7 @@ def updateSettings(settings):
 
     bools = (ctypes.c_bool * 4)(
         settings.smooth_bonds,
-        settings.premulitply_color,
+        settings.premultiply_color,
         settings.cubemap_use_gpu,
         settings.orthographic
     )
