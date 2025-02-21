@@ -42,7 +42,7 @@ Controls the functions of the program. Some settings take effect at all times, o
 |`cubemap_density`|`float`| CG: How densely samples in your cubemap should be distributed. This drastically affects performance when dealing with cubemaps. Calling `setCubemapResolution()` with a non-zero resolution overrides this. If `setCubemapResolution(0)` is called, `cubemap_density` will come back into effect. |`8.`|
 |`volumetric_light_distance`|`float`| How far rays are cast during volumetrics rendering for shading. Higher values improve visual quality, but also require higher sample counts which adversely affects performance. |`3.`|
 |`volumetric_cutoff`|`float`| Affects at which density values the volumetrics shader will skip samples. Low values decrease performance, high values affect visual quality. |`0.00001`|
-|`isovalue`|`float`| The isovalue for IG. |`0.04`
+|`isovalue`|`float`| IG: The isovalue for rendering isosurfaces, assuming atomic units. |`0.02`
 |`isosurface roughness`|`float`| IG: The roughness of the isosurface material, between `0` and `1`. Lower values mean shinier isosurfaces. |`0.5`|
 |`isosurface metallicity`|`float`| IG: The amount of metallic shading of the isosurface material. Normally this should be set to `0` or `1`. |`0.`|
 |`volumetric_density`|`float`| Controls the density of volumetric MOs. |`50.`
@@ -102,7 +102,12 @@ Destroys the GLFW context and all allocated OpenGL objects.
 
 
 ### `loadMoldenFile(path)`
-Loads a Molden file. This envolves loading both XYZ and orbital data. Warning: If no file is found, the program tends to cause a segmentation fault.
+Loads a Molden file. This envolves loading both XYZ and orbital data.
+- `path` Relative path to the file including its name.
+
+
+### `loadWFXFile(path)`
+Loads a .wfx file. This envolves loading both XYZ and orbital data. This is slightly experimental.
 - `path` Relative path to the file including its name.
 
 
