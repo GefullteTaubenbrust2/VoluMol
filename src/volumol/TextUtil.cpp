@@ -112,4 +112,10 @@ namespace mol {
 		}
 		return true;
 	}
+
+	void skipWhitespace(const std::string& str, uint& offset) {
+		for (; offset < str.size(); ++offset) {
+			if (!isWhiteSpace(str[offset])) break;
+		}
+	}
 }

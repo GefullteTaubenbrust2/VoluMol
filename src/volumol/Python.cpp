@@ -1,6 +1,7 @@
 #include "MolInterface.h"
 #include "Molecule.h"
 #include "Molden.h"
+#include "WFXReader.h"
 #include "Orbital.h"
 #include "MolRenderer.h"
 #include "XYZReader.h"
@@ -59,6 +60,10 @@ DLLEXPORT void pyDispose() {
 
 DLLEXPORT void pyLoadMoldenFile(char const* path) {
 	mol::Molden::loadFile(path);
+}
+
+DLLEXPORT void pyLoadWFXFile(char const* path) {
+	mol::WFX::loadFile(path);
 }
 
 DLLEXPORT void pyLoadXYZFile(char const* path) {

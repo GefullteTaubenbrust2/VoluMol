@@ -40,9 +40,7 @@ namespace mol::Molden {
 	Section section = Section::search;
 
 	void skipWhiteSpace() {
-		for (; column < l.size(); ++column) {
-			if (!isWhiteSpace(l[column])) break;
-		}
+		skipWhitespace(l, column);
 	}
 
 	void throwError(const std::string& message) {

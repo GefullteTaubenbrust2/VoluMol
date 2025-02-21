@@ -18,6 +18,7 @@ else:
         print("Could not find library!")
 
 __library.pyLoadMoldenFile.argtypes = [ctypes.c_char_p]
+__library.pyLoadWFXFile.argtypes = [ctypes.c_char_p]
 __library.pyLoadXYZFile.argtypes = [ctypes.c_char_p]
 __library.pyGetAtom.argtypes = [ctypes.c_int, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_float)]
 __library.pySetTransform.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_float)]
@@ -49,7 +50,7 @@ class Settings:
     cubemap_density = 8.
     volumetric_light_distance = 3.
     volumetric_cutoff = 0.00001
-    isovalue = 0.04
+    isovalue = 0.02
     isosurface_roughness = 0.5
     isosurface_metallicity = 0.
     volumetric_density = 50.
@@ -122,6 +123,9 @@ def dispose():
 
 def loadMoldenFile(path):
     __library.pyLoadMoldenFile(path.encode("utf-8"))
+
+def loadWFXFile(path):
+    __library.pyLoadWFXFile(path.encode("utf-8"))
 
 def loadXYZFile(path):
     __library.pyLoadXYZFile(path.encode("utf-8"))

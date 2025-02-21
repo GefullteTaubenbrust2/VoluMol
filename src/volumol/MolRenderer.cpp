@@ -1,4 +1,8 @@
 #include "MolRenderer.h"
+
+#include "Constants.h"
+#include "Isosurface.h"
+
 #include "../graphics/GErrorHandler.h"
 #include "../graphics/3D/ShadowMap.h"
 #include "../graphics/Window.h"
@@ -6,8 +10,6 @@
 #include "../graphics/Blur.h"
 #include "../graphics/Renderstate.h"
 #include "../logic/Random.h"
-
-#include "Isosurface.h"
 
 namespace mol {
 	RenderProperties settings;
@@ -202,10 +204,11 @@ namespace mol::Renderer {
 	}
 
 	void setIsosurface() {
-		Mesh iso_mesh = generateIsosurface(cubemap, settings.isovalue, settings.mo_colors[0], glm::vec2(settings.isosurface_roughness, settings.isosurface_metallicity));
+		float isovalue = settings.isovalue / glm::pow(a0_A, 1.5);
+		Mesh iso_mesh = generateIsosurface(cubemap, isovalue, settings.mo_colors[0], glm::vec2(settings.isosurface_roughness, settings.isosurface_metallicity));
 		isosurface_mesh.vertices = iso_mesh.vertices;
 		isosurface_mesh.indices = iso_mesh.indices;
-		iso_mesh = generateIsosurface(cubemap, settings.isovalue, settings.mo_colors[1], glm::vec2(settings.isosurface_roughness, settings.isosurface_metallicity), true);
+		iso_mesh = generateIsosurface(cubemap, isovalue, settings.mo_colors[1], glm::vec2(settings.isosurface_roughness, settings.isosurface_metallicity), true);
 		isosurface_mesh.mergeMesh(iso_mesh, glm::mat4(1.0));
 	}
 

@@ -23,4 +23,6 @@ namespace mol {
 	std::string readText(const std::string& str, uint& offset);
 
 	bool findKeyword(const std::string& str, const std::string& keyword, uint offset);
+
+	void skipWhitespace(const std::string& str, uint& offset);
 }

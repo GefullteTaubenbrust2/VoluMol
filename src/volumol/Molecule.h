@@ -78,7 +78,7 @@ namespace mol {
 
 		uint taa_quality = 1;
 
-		float isovalue = 0.04f;
+		float isovalue = 0.02f;
 		float isosurface_roughness = 0.5f;
 		float isosurface_metallicity = 0.f;
 
