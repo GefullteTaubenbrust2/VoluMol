@@ -1,5 +1,5 @@
 # VoluMol
-A simple program for rendering molecules and molecular orbitals using OpenGL.
+A simple program for rendering molecules and molecular orbitals written in C++ and GLSL using OpenGL.
 
 ![A](volumol.png)
 
