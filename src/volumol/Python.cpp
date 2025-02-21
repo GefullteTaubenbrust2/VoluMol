@@ -22,45 +22,6 @@
 
 extern std::string executable_path;
 
-DLLEXPORT void test() {
-GLFWwindow* window;
-
-   /* Init GLFW */
-   if( !glfwInit() )
-      exit( EXIT_FAILURE );
-
-   window = glfwCreateWindow( 400, 400, "Boing (classic Amiga demo)", NULL, NULL );
-   if (!window)
-   {
-       glfwTerminate();
-       exit( EXIT_FAILURE );
-   }
-
-   glfwSetWindowAspectRatio(window, 1, 1);
-
-   glfwMakeContextCurrent(window);
-   gladLoadGL();
-   glfwSwapInterval( 1 );
-
-   glfwSetTime( 0.0 );
-
-   /* Main loop */
-   for (;;)
-   {
-
-       /* Swap buffers */
-       glfwSwapBuffers(window);
-       glfwPollEvents();
-
-       /* Check if we are still running */
-       if (glfwWindowShouldClose(window))
-           break;
-   }
-
-   glfwTerminate();
-   exit( EXIT_SUCCESS );
-}
-
 namespace mol {
 	extern mol::RenderProperties settings;
 
