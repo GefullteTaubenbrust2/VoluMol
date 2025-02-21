@@ -193,6 +193,8 @@ namespace mol::Renderer {
 	}
 
 	void setVolumetric() {
+		if (!cubemap.texture.id) return;
+
 		volumetric_shader.setVec3(4, cubemap.origin);
 		volumetric_shader.setVec3(5, cubemap.size);
 

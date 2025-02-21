@@ -11,6 +11,8 @@ namespace mol {
 
 		fgr::Mesh mesh = fgr::Mesh();
 
+		if (!width || !height || !depth) return mesh;
+
 		flo::Array<int> index_buffer(3 * width * height * depth);
 		for (int i = 0; i < 3 * width * height * depth; ++i) index_buffer[i] = -1;
 

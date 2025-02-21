@@ -73,8 +73,9 @@ glm::vec3 vec3FromFloats(float* floats, uint offset) {
 	return glm::vec3(floats[3 * offset], floats[1 + 3 * offset], floats[2 + 3 * offset]);
 }
 
-DLLEXPORT void pySetPath(char const* path) {
-	executable_path = path;
+DLLEXPORT void pySetPath(wchar_t const* path) {
+	std::wstring str = path;
+	executable_path = std::string(str.begin(), str.end());
 }
 
 DLLEXPORT void pyCreateWindow() {

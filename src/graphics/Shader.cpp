@@ -33,9 +33,12 @@ namespace fgr {
 
 	bool Shader::loadFromFile(const std::string& vertex_path, const std::string& fragment_path, const std::vector<std::string>& uniforms) {
 		graphics_check_external();
-
 		std::ifstream stream;
 		stream.open(executable_path + vertex_path, std::ios::ate | std::ios::binary);
+		if (!stream.is_open()) {
+			std::cerr << "Failed to load vertex shader\n";
+			return true;
+		}
 		stream.seekg(0, std::ios::end);
 		uint size = stream.tellg();
 		stream.seekg(0, std::ios::beg);
@@ -59,6 +62,11 @@ namespace fgr {
 		delete[] vertex_src;
 
 		stream.open(executable_path + fragment_path, std::ios::ate | std::ios::binary);
+		if (!stream.is_open()) {
+			std::cerr << "Failed to load fragment shader\n";
+			glDeleteShader(vertex_shader);
+			return true;
+		}
 		stream.seekg(0, std::ios::end);
 		size = stream.tellg();
 		stream.seekg(0, std::ios::beg);
@@ -110,6 +118,10 @@ namespace fgr {
 
 		std::ifstream stream;
 		stream.open(executable_path + vertex_path, std::ios::ate | std::ios::binary);
+		if (!stream.is_open()) {
+			std::cerr << "Failed to load vertex shader\n";
+			return true;
+		}
 		stream.seekg(0, std::ios::end);
 		uint size = stream.tellg();
 		stream.seekg(0, std::ios::beg);
@@ -133,6 +145,11 @@ namespace fgr {
 		delete[] vertex_src;
 
 		stream.open(executable_path + fragment_path, std::ios::ate | std::ios::binary);
+		if (!stream.is_open()) {
+			std::cerr << "Failed to load fragment shader\n";
+			glDeleteShader(vertex_shader);
+			return true;
+		}
 		stream.seekg(0, std::ios::end);
 		size = stream.tellg();
 		stream.seekg(0, std::ios::beg);
@@ -154,6 +171,11 @@ namespace fgr {
 		delete[] fragment_src;
 
 		stream.open(executable_path + geometry_path, std::ios::ate | std::ios::binary);
+		if (!stream.is_open()) {
+			std::cerr << "Failed to load geometry shader\n";
+			glDeleteShader(fragment_shader);
+			return true;
+		}
 		stream.seekg(0, std::ios::end);
 		size = stream.tellg();
 		stream.seekg(0, std::ios::beg);

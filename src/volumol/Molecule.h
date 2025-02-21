@@ -42,7 +42,7 @@ namespace mol {
 		float bond_thickness = 0.2f;
 		float bond_length_tolerance = 0.3f;
 
-		glm::vec3 ambient_color = glm::vec3(0.25);
+		glm::vec3 ambient_color = glm::vec3(0.4);
 		glm::vec3 sun_color = glm::vec3(2.);
 		glm::vec3 sun_position = glm::vec3(2., 1., 1.);
 

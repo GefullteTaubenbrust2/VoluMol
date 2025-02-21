@@ -2,9 +2,20 @@ import ctypes
 import os
 import pathlib
 
-__VOLUMOL_PATH = os.path.dirname(__file__) + "/"
+__VOLUMOL_PATH = os.path.dirname(__file__).replace("\\", "/") + "/"
 
-__library = ctypes.cdll.LoadLibrary(__VOLUMOL_PATH + "VoluMol.so")
+__WORKING_PATH = os.getcwd().replace("\\", "/")
+
+__lib = pathlib.Path(__VOLUMOL_PATH + "VoluMol.so")
+
+if (__lib.is_file()):
+    __library = ctypes.cdll.LoadLibrary(__VOLUMOL_PATH + "VoluMol.so")
+else:
+    __lib = pathlib.Path(__VOLUMOL_PATH + "VoluMol.dll")
+    if (__lib.is_file()):
+        __library = ctypes.cdll.LoadLibrary(__VOLUMOL_PATH + "VoluMol.dll")
+    else:
+        print("Could not find library!")
 
 __library.pyLoadMoldenFile.argtypes = [ctypes.c_char_p]
 __library.pyLoadXYZFile.argtypes = [ctypes.c_char_p]
@@ -21,9 +32,9 @@ __library.pyGetCameraOrientation.argtypes = [ctypes.POINTER(ctypes.c_float), cty
 __library.pyElementProperties.argtypes = [ctypes.c_int, ctypes.c_float, ctypes.c_float, ctypes.c_float, ctypes.c_float, ctypes.c_float]
 __library.pyUpdateSettings.argtypes = [ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_bool)]
 __library.pySaveImage.argtypes = [ctypes.c_char_p, ctypes.c_int, ctypes.c_int]
-__library.pySetPath.argtypes = [ctypes.c_char_p]
+__library.pySetPath.argtypes = [ctypes.c_wchar_p]
 
-__library.pySetPath(__VOLUMOL_PATH.encode("utf-8"))
+__library.pySetPath(ctypes.c_wchar_p(__VOLUMOL_PATH))
 
 class Settings:
     size_factor = 0.2
@@ -46,7 +57,7 @@ class Settings:
     z_near = 0.3
     z_far = 300.
 
-    ambient_color = (0.25, 0.25, 0.25)
+    ambient_color = (0.4, 0.4, 0.4)
     sun_color = (2., 2., 2.)
     sun_position = (2., 1., 1.)
     mo_color_0 = (1., 0.25, 0.)

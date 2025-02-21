@@ -567,6 +567,7 @@ namespace mol {
 	}
 
 	void MOCubeMap(uint orbital) {
+		if (orbital >= mos.size()) return;
 		mos[orbital].writeCubeMap(cubemap);
 	}
 

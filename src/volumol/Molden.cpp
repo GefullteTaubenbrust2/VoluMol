@@ -235,6 +235,10 @@ namespace mol::Molden {
 
 	void loadFile(const std::string& path) {
 		file = flo::readFile(path);
+		if (!file.size()) {
+			std::cout << "File not found for empty\n";
+			return;
+		}
 
 		line = 0;
 		column = 0;
