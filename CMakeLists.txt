@@ -9,7 +9,7 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
-add_subdirectory(glfw-3.4)
+add_subdirectory(glfw)
 
 #add_executable(library test.cpp src/graphics/glad.c)
 #add_library(library SHARED test.cpp src/graphics/glad.c)
@@ -54,6 +54,7 @@ target_sources(
 	src/volumol/Orbital.cpp
 	src/volumol/TextUtil.cpp
 	src/volumol/XYZReader.cpp
+	src/volumol/WFXReader.cpp
 )
 
 set_target_properties(library PROPERTIES PREFIX "")
