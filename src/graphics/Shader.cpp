@@ -9,23 +9,18 @@
 std::string executable_path = "";
 
 namespace fgr {
-	Shader
-		Shader::basic("shaders/basic.vert", "shaders/basic.frag", std::vector<std::string>{"tint"}),
-		Shader::basic_instanced,
-		//Shader::basic_instanced("shaders/instanced/basic.vert", "shaders/basic.frag", std::vector<std::string>{}),
-		Shader::line,
-		//Shader::line("shaders/line.vert", "shaders/basic.frag", "shaders/line.geom", std::vector<std::string>{"screen_dimensions", "line_thickness"}),
-		Shader::line_instanced,
-		//Shader::line_instanced("shaders/instanced/line.vert", "shaders/basic.frag", "shaders/line.geom", std::vector<std::string>{"screen_dimensions", "line_thickness"}),
-		Shader::textured("shaders/textured.vert", "shaders/textured.frag", std::vector<std::string>{"texture"}),
-		Shader::textured_instanced,
-		//Shader::textured_instanced("shaders/instanced/textured.vert", "shaders/textured.frag", std::vector<std::string>{"texture"}),
-		Shader::sprites_instanced,
-		//Shader::sprites_instanced("shaders/instanced/sprite.vert", "shaders/instanced/sprite.frag", std::vector<std::string>{"textures"}),
-		Shader::sprites_instanced_depth;
-		//Shader::sprites_instanced_depth("shaders/instanced/sprite.vert", "shaders/instanced/depthsprite.frag", std::vector<std::string>{"textures"});
+	Shader Shader::basic, Shader::basic_instanced, Shader::line, Shader::line_instanced, Shader::textured, Shader::textured_instanced, Shader::sprites_instanced, Shader::sprites_instanced_depth;
 
 	void init_shader_defaults() {
+		Shader::basic = Shader("shaders/basic.vert", "shaders/basic.frag", std::vector<std::string>{"tint"});
+		//Shader::basic_instanced = Shader("shaders/instanced/basic.vert", "shaders/basic.frag", std::vector<std::string>{});
+		//Shader::line = Shader("shaders/line.vert", "shaders/basic.frag", "shaders/line.geom", std::vector<std::string>{"screen_dimensions", "line_thickness"});
+		Shader::line_instanced = Shader("shaders/instanced/line.vert", "shaders/basic.frag", "shaders/line.geom", std::vector<std::string>{"screen_dimensions", "line_thickness"});
+		//Shader::textured = Shader("shaders/textured.vert", "shaders/textured.frag", std::vector<std::string>{"texture"});
+		//Shader::textured_instanced = Shader("shaders/instanced/textured.vert", "shaders/textured.frag", std::vector<std::string>{"texture"});
+		//Shader::sprites_instanced = Shader("shaders/instanced/sprite.vert", "shaders/instanced/sprite.frag", std::vector<std::string>{"textures"});
+		//Shader::sprites_instanced_depth = Shader("shaders/instanced/sprite.vert", "shaders/instanced/depthsprite.frag", std::vector<std::string>{"textures"});
+
 		Shader::basic.compile();
 		//Shader::basic_instanced.compile();
 		//Shader::line.compile();
@@ -58,13 +53,13 @@ namespace fgr {
 	Shader::Shader(const std::string& vertex_path, const std::string& fragment_path, const std::vector<std::string>& uniforms) : uniform_names(uniforms) {
 		vertex_code = flo::readFullFile(executable_path + vertex_path);
 		if (!vertex_code.size()) {
-			std::cerr << "Vertex shader '" + vertex_path + "' not found\n";
+			std::cerr << "Vertex shader '" + executable_path + vertex_path + "' not found\n";
 			return;
 		}
 		vertex_code += '\0';
 		fragment_code = flo::readFullFile(executable_path + fragment_path);
 		if (!fragment_code.size()) {
-			std::cerr << "Fragment shader '" + fragment_path + "' not found\n";
+			std::cerr << "Fragment shader '" + executable_path + fragment_path + "' not found\n";
 			return;
 		}
 		fragment_code += '\0';
@@ -73,19 +68,19 @@ namespace fgr {
 	Shader::Shader(const std::string& vertex_path, const std::string& fragment_path, const std::string& geometry_path, const std::vector<std::string>& uniforms) : uniform_names(uniforms) {
 		vertex_code = flo::readFullFile(executable_path + vertex_path);
 		if (!vertex_code.size()) {
-			std::cerr << "Vertex shader '" + vertex_path + "' not found\n";
+			std::cerr << "Vertex shader '" + executable_path + vertex_path + "' not found\n";
 			return;
 		}
 		vertex_code += '\0';
 		fragment_code = flo::readFullFile(executable_path + fragment_path);
 		if (!fragment_code.size()) {
-			std::cerr << "Fragment shader '" + fragment_path + "' not found\n";
+			std::cerr << "Fragment shader '" + executable_path + fragment_path + "' not found\n";
 			return;
 		}
 		fragment_code += '\0';
 		geometry_code = flo::readFullFile(executable_path + geometry_path);
 		if (!geometry_code.size()) {
-			std::cerr << "Geometry shader '" + geometry_path + "' not found\n";
+			std::cerr << "Geometry shader '" + executable_path + geometry_path + "' not found\n";
 			return;
 		}
 		geometry_code += '\0';
