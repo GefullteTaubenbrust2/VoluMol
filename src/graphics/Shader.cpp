@@ -241,155 +241,127 @@ namespace fgr {
 
 	void Shader::setInt(const int location, const int value) {
 		glUseProgram(shader_program);
-		#if _DEBUG
 		if (location >= uniform_locations.size() || location < 0) {
 			graphics_throw_error("An out of bounds exception");
 			return;
 		}
-		#endif
 		glUniform1i(uniform_locations[location], value);
 	}
 
 	void Shader::setFloat(const int location, const float value) {
 		glUseProgram(shader_program);
-		#if _DEBUG
 		if (location >= uniform_locations.size() || location < 0) {
 			graphics_throw_error("An out of bounds exception");
 			return;
 		}
-		#endif
 		glUniform1f(uniform_locations[location], value);
 	}
 
 	void Shader::setVec2(const int location, const glm::vec2 value) {
 		glUseProgram(shader_program);
-		#if _DEBUG
 		if (location >= uniform_locations.size() || location < 0) {
 			graphics_throw_error("An out of bounds exception");
 			return;
 		}
-		#endif
 		glUniform2fv(uniform_locations[location], 1, glm::value_ptr(value));
 	}
 
 	void Shader::setVec3(const int location, const glm::vec3 value) {
 		glUseProgram(shader_program);
-		#if _DEBUG
 		if (location >= uniform_locations.size() || location < 0) {
 			graphics_throw_error("An out of bounds exception");
 			return;
 		}
-		#endif
 		glUniform3fv(uniform_locations[location], 1, glm::value_ptr(value));
 	}
 
 	void Shader::setVec4(const int location, const glm::vec4 value) {
 		glUseProgram(shader_program);
-		#if _DEBUG
 		if (location >= uniform_locations.size() || location < 0) {
 			graphics_throw_error("An out of bounds exception");
 			return;
 		}
-		#endif
 		glUniform4fv(uniform_locations[location], 1, glm::value_ptr(value));
 	}
 
 	void Shader::setMat3(const int location, const glm::mat3 value, const bool transpose) {
 		glUseProgram(shader_program);
-		#if _DEBUG
 		if (location >= uniform_locations.size() || location < 0) {
 			graphics_throw_error("An out of bounds exception");
 			return;
 		}
-		#endif
 		glUniformMatrix3fv(uniform_locations[location], 1, transpose, glm::value_ptr(value));
 	}
 
 	void Shader::setMat4(const int location, const glm::mat4 value, const bool transpose) {
 		glUseProgram(shader_program);
-		#if _DEBUG
 		if (location >= uniform_locations.size() || location < 0) {
 			graphics_throw_error("An out of bounds exception");
 			return;
 		}
-		#endif
 		glUniformMatrix4fv(uniform_locations[location], 1, transpose, glm::value_ptr(value));
 	}
 
 	void Shader::setIntArray(const int location, const int* value, const int count) {
 		glUseProgram(shader_program);
-		#if _DEBUG
 		if (location >= uniform_locations.size() || location < 0) {
 			graphics_throw_error("An out of bounds exception");
 			return;
 		}
-		#endif
 		glUniform1iv(uniform_locations[location], count, value);
 	}
 
 	void Shader::setFloatArray(const int location, const float* value, const int count) {
 		glUseProgram(shader_program);
-		#if _DEBUG
 		if (location >= uniform_locations.size() || location < 0) {
 			graphics_throw_error("An out of bounds exception");
 			return;
 		}
-		#endif
 		glUniform1fv(uniform_locations[location], count, value);
 	}
 
 	void Shader::setVec2Array(const int location, const glm::vec2* value, const int count) {
 		glUseProgram(shader_program);
-		#if _DEBUG
 		if (location >= uniform_locations.size() || location < 0) {
 			graphics_throw_error("An out of bounds exception");
 			return;
 		}
-		#endif
 		glUniform2fv(uniform_locations[location], count, glm::value_ptr(value[0]));
 	}
 
 	void Shader::setVec3Array(const int location, const glm::vec3* value, const int count) {
 		glUseProgram(shader_program);
-		#if _DEBUG
 		if (location >= uniform_locations.size() || location < 0) {
 			graphics_throw_error("An out of bounds exception");
 			return;
 		}
-		#endif
 		glUniform3fv(uniform_locations[location], count, glm::value_ptr(value[0]));
 	}
 
 	void Shader::setVec4Array(const int location, const glm::vec4* value, const int count) {
 		glUseProgram(shader_program);
-		#if _DEBUG
 		if (location >= uniform_locations.size() || location < 0) {
 			graphics_throw_error("An out of bounds exception");
 			return;
 		}
-		#endif
 		glUniform4fv(uniform_locations[location], count, glm::value_ptr(value[0]));
 	}
 
 	void Shader::setMat3Array(const int location, const glm::mat3* value, const int count, const bool transpose) {
 		glUseProgram(shader_program);
-		#if _DEBUG
 		if (location >= uniform_locations.size() || location < 0) {
 			graphics_throw_error("An out of bounds exception");
 			return;
 		}
-		#endif
 		glUniformMatrix3fv(uniform_locations[location], count, transpose, glm::value_ptr(value[0]));
 	}
 
 	void Shader::setMat4Array(const int location, const glm::mat4* value, const int count, const bool transpose) {
 		glUseProgram(shader_program);
-		#if _DEBUG
 		if (location >= uniform_locations.size() || location < 0) {
 			graphics_throw_error("An out of bounds exception");
 			return;
 		}
-		#endif
 		glUniformMatrix4fv(uniform_locations[location], count, transpose, glm::value_ptr(value[0]));
 	}
 
