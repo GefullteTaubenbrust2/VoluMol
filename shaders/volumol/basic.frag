@@ -93,7 +93,7 @@ void main() {
 	vec3 fNormal = normalize(normal);
 	
 #ifdef ORTHOGRAPHIC
-	vec3 view_vector = camera_dir;
+	vec3 view_vector = -camera_dir;
 #else
 	vec3 view_vector = normalize(camera_pos - vertPos);
 #endif
