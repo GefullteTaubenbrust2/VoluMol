@@ -14,6 +14,8 @@ namespace fgr {
 	}
 
 	void CascadedShadowMap::operator=(const CascadedShadowMap& other) {
+		if (&other == this) return;
+
 		dispose();
 
 		resolution = other.resolution;
@@ -60,7 +62,8 @@ namespace fgr {
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		if (!shadowmap_shader.shader_program) {
-			shadowmap_shader.loadFromFile("shaders/volumol/shadow.vert", "shaders/volumol/shadow.frag", std::vector<std::string>{"model", "projection"});
+			shadowmap_shader = Shader("shaders/volumol/shadow.vert", "shaders/volumol/shadow.frag", std::vector<std::string>{"model", "projection"});
+			shadowmap_shader.compile();
 		}
 
 		graphics_check_error();
@@ -203,12 +206,9 @@ namespace fgr {
 		views[0] = projection_matrix * view_matrix;
 	}
 
-	void CascadedShadowMap::drawShadows(Mesh& mesh) {
+	void CascadedShadowMap::clear() {
 		for (int i = 0; i < levels; ++i) {
 			fbos[i].bind();
-
-			shadowmap_shader.setMat4(0, mesh.model_matrix);
-			shadowmap_shader.setMat4(1, views[i]);
 
 			graphics_check_external();
 
@@ -216,6 +216,15 @@ namespace fgr {
 			glClear(GL_DEPTH_BUFFER_BIT);
 
 			graphics_check_error();
+		}
+	}
+
+	void CascadedShadowMap::drawShadows(Mesh& mesh) {
+		for (int i = 0; i < levels; ++i) {
+			fbos[i].bind();
+
+			shadowmap_shader.setMat4(0, mesh.model_matrix);
+			shadowmap_shader.setMat4(1, views[i]);
 
 			mesh.render(shadowmap_shader, false, true);
 
@@ -223,13 +232,12 @@ namespace fgr {
 		}
 	}
 
-	void CascadedShadowMap::bindUniforms(Shader& shader, uint first_uniform, uint mat_count, TextureUnit unit) {
-		shader.setInt(first_uniform + 1, levels);
+	void CascadedShadowMap::bindUniforms(Shader& shader, uint first_uniform, TextureUnit unit) {
 		glActiveTexture(UNIT_ENUM_TO_GL_UNIT(unit));
 		glBindTexture(GL_TEXTURE_2D_ARRAY, texture_id);
 		shader.setInt(first_uniform, unit);
-		shader.setMat4Array(first_uniform + 2, views.data(), mat_count);
-		shader.setFloatArray(first_uniform + 3, view_depths.data(), mat_count);
+		shader.setMat4Array(first_uniform + 1, views.data(), levels);
+		shader.setFloatArray(first_uniform + 2, view_depths.data(), levels + 1);
 	}
 
 	void CascadedShadowMap::dispose() {

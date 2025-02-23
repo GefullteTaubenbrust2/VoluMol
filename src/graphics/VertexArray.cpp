@@ -22,6 +22,8 @@ namespace fgr {
 	}
 
 	void VertexArray::operator=(const VertexArray& other) {
+		if (&other == this) return;
+
 		dispose();
 
 		dynamic_allocation = other.dynamic_allocation;
@@ -127,6 +129,8 @@ namespace fgr {
 	}
 
 	void InstanceArray::operator=(const InstanceArray& other) {
+		if (&other == this) return;
+
 		dispose();
 
 		instances = other.instances;

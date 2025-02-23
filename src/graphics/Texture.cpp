@@ -36,6 +36,8 @@ namespace fgr {
 	}
 
 	void TextureHandle::operator=(const TextureHandle& other) {
+		if (&other == this) return;
+
 		dispose();
 
 		width = other.width;
@@ -202,6 +204,8 @@ namespace fgr {
 	}
 
 	void ArrayTexture::operator=(const ArrayTexture& other) {
+		if (&other == this) return;
+
 		dispose();
 
 		width = other.width;
@@ -523,10 +527,11 @@ namespace fgr {
 			glViewport(bounds.x, bounds.y, bounds.z - bounds.x, bounds.w - bounds.y);
 		}
 
+		Blending blendmode = getBlending();
 		setBlending(Blending::none);
 		fgr::Shader::basic.setVec4(0, color);
 		drawRectangle(glm::mat3(1.), fgr::Shader::basic);
-		setBlending(Blending::linear);
+		setBlending(blendmode);
 		t.bind();
 
 		graphics_check_error();

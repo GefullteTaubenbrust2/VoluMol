@@ -71,6 +71,10 @@ namespace mol {
 		float volumetric_light_distance = 3.f;
 		float volumetric_density = 50.f;
 		float volumetric_cutoff = 0.00001f;
+		float volumetric_gradient = 1.f;
+		bool volumetric_shadowmap = true;
+		bool emissive_volume = false;
+		bool volumetric_density_mode = false;
 
 		glm::vec3 clear_color = glm::vec3(1.0);
 		bool premulitply_color = true;

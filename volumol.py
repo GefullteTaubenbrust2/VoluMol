@@ -57,6 +57,7 @@ class Settings:
     brightness = 1.
     z_near = 0.3
     z_far = 300.
+    volumetric_gradient = 1.
 
     ambient_color = (0.4, 0.4, 0.4)
     sun_color = (2., 2., 2.)
@@ -77,6 +78,9 @@ class Settings:
     premultiply_color = True
     cubemap_use_gpu = True
     orthographic = False
+    volumetric_shadowmap = True
+    emissive_volume = False
+    volumetric_color_mode = False
 
 SPIN_UP = False
 SPIN_DOWN = True
@@ -187,7 +191,7 @@ def setElementProperties(Z, color, roughness, metallic):
     __library.pyElementProperties(Z, color[0], color[1], color[2], roughness, metallic)
 
 def updateSettings(settings):
-    floats = (ctypes.c_float * 19)(
+    floats = (ctypes.c_float * 20)(
         settings.size_factor, 
         settings.bond_thickness, 
         settings.bond_length_tolerance,
@@ -206,7 +210,8 @@ def updateSettings(settings):
         settings.volumetric_density,
         settings.brightness,
         settings.z_near,
-        settings.z_far
+        settings.z_far,
+        settings.volumetric_gradient
     )
 
     vec3s = compressVec3(
@@ -227,11 +232,14 @@ def updateSettings(settings):
     ints[5] = settings.cubemap_thread_count
     ints[6] = settings.ao_iterations
 
-    bools = (ctypes.c_bool * 4)(
+    bools = (ctypes.c_bool * 7)(
         settings.smooth_bonds,
         settings.premultiply_color,
         settings.cubemap_use_gpu,
-        settings.orthographic
+        settings.orthographic,
+        settings.volumetric_shadowmap,
+        settings.emissive_volume,
+        settings.volumetric_color_mode
     )
 
     __library.pyUpdateSettings(floats, vec3s, ints, bools)

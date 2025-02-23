@@ -14,6 +14,8 @@ namespace fgr {
 	}
 
 	void BlurBuffer::operator=(const BlurBuffer& other) {
+		if (&other == this) return;
+
 		dispose();
 
 		blur_radius = other.blur_radius;
@@ -22,15 +24,18 @@ namespace fgr {
 	}
 
 	void BlurBuffer::init() {
-		if (!blur5_shader.loaded) blur5_shader.loadFromFile("shaders/textured.vert", "shaders/blur5.frag", std::vector<std::string>{
-			"texture", "direction"
-		});
-		if (!blur10_shader.loaded) blur10_shader.loadFromFile("shaders/textured.vert", "shaders/blur10.frag", std::vector<std::string>{
-			"texture", "direction"
-		});
-		if (!scale_shader.loaded) scale_shader.loadFromFile("shaders/textured.vert", "shaders/downscale.frag", std::vector<std::string>{
-			"texture", "scale_factor"
-		});
+		if (!blur5_shader.loaded) {
+			blur5_shader = fgr::Shader("shaders/textured.vert", "shaders/blur5.frag", std::vector<std::string>{"texture", "direction"});
+			blur5_shader.compile();
+		}
+		if (!blur10_shader.loaded) {
+			blur10_shader = Shader("shaders/textured.vert", "shaders/blur10.frag", std::vector<std::string>{"texture", "direction"});
+			blur10_shader.compile();
+		}
+		if (!scale_shader.loaded) {
+			scale_shader = Shader("shaders/textured.vert", "shaders/downscale.frag", std::vector<std::string>{"texture", "scale_factor"});
+			scale_shader.compile();
+		}
 		io_fbo.init(10, 10, GL_RGBA16, GL_MIRRORED_REPEAT, GL_LINEAR);
 		util_fbo.init(10, 10, GL_RGBA16, GL_MIRRORED_REPEAT, GL_LINEAR);
 	}
@@ -49,6 +54,8 @@ namespace fgr {
 		glm::ivec2 size = (glm::vec2)tex_size / downsample;
 
 		RenderTarget rt = RenderTarget::bound;
+
+		Blending blendmode = getBlending();
 
 		setBlending(Blending::none);
 
@@ -83,7 +90,7 @@ namespace fgr {
 		blur_shader.setVec2(1, glm::vec2(0., radius_factor / (float)util_fbo.tex_height));
 		drawRectangle(glm::mat3(1.), blur_shader);
 
-		setBlending(Blending::linear);
+		setBlending(blendmode);
 		rt.bind();
 	}
 

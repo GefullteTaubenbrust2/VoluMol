@@ -1,25 +1,39 @@
-#include <fstream>
-
 #include "Shader.h"
 
 #include "GErrorHandler.h"
 
 #include "Window.h"
 
+#include "../logic/TextReading.h"
+
 std::string executable_path = "";
 
 namespace fgr {
-	Shader Shader::basic, Shader::basic_instanced, Shader::line, Shader::line_instanced, Shader::textured, Shader::textured_instanced, Shader::sprites_instanced, Shader::sprites_instanced_depth;
+	Shader
+		Shader::basic("shaders/basic.vert", "shaders/basic.frag", std::vector<std::string>{"tint"}),
+		Shader::basic_instanced,
+		//Shader::basic_instanced("shaders/instanced/basic.vert", "shaders/basic.frag", std::vector<std::string>{}),
+		Shader::line,
+		//Shader::line("shaders/line.vert", "shaders/basic.frag", "shaders/line.geom", std::vector<std::string>{"screen_dimensions", "line_thickness"}),
+		Shader::line_instanced,
+		//Shader::line_instanced("shaders/instanced/line.vert", "shaders/basic.frag", "shaders/line.geom", std::vector<std::string>{"screen_dimensions", "line_thickness"}),
+		Shader::textured("shaders/textured.vert", "shaders/textured.frag", std::vector<std::string>{"texture"}),
+		Shader::textured_instanced,
+		//Shader::textured_instanced("shaders/instanced/textured.vert", "shaders/textured.frag", std::vector<std::string>{"texture"}),
+		Shader::sprites_instanced,
+		//Shader::sprites_instanced("shaders/instanced/sprite.vert", "shaders/instanced/sprite.frag", std::vector<std::string>{"textures"}),
+		Shader::sprites_instanced_depth;
+		//Shader::sprites_instanced_depth("shaders/instanced/sprite.vert", "shaders/instanced/depthsprite.frag", std::vector<std::string>{"textures"});
 
 	void init_shader_defaults() {
-		Shader::basic.loadFromFile("shaders/basic.vert", "shaders/basic.frag", std::vector<std::string>{"tint"});
-		//Shader::basic_instanced.loadFromFile("shaders/instanced/basic.vert", "shaders/basic.frag", std::vector<std::string>{});
-		//Shader::line.loadFromFile("shaders/line.vert", "shaders/basic.frag", "shaders/line.geom", std::vector<std::string>{"screen_dimensions", "line_thickness"});
-		//Shader::line_instanced.loadFromFile("shaders/instanced/line.vert", "shaders/basic.frag", "shaders/line.geom", std::vector<std::string>{"screen_dimensions", "line_thickness"});
-		Shader::textured.loadFromFile("shaders/textured.vert", "shaders/textured.frag", std::vector<std::string>{"texture"});
-		//Shader::textured_instanced.loadFromFile("shaders/instanced/textured.vert", "shaders/textured.frag", std::vector<std::string>{"texture"});
-		//Shader::sprites_instanced.loadFromFile("shaders/instanced/sprite.vert", "shaders/instanced/sprite.frag", std::vector<std::string>{"textures"});
-		//Shader::sprites_instanced_depth.loadFromFile("shaders/instanced/sprite.vert", "shaders/instanced/depthsprite.frag", std::vector<std::string>{"textures"});
+		Shader::basic.compile();
+		//Shader::basic_instanced.compile();
+		//Shader::line.compile();
+		//Shader::line_instanced.compile();
+		Shader::textured.compile();
+		//Shader::textured_instanced.compile();
+		//Shader::sprites_instanced.compile();
+		//Shader::sprites_instanced_depth.compile();
 		Shader::basic.setVec4(0, glm::vec4(1.));
 	}
 
@@ -28,26 +42,73 @@ namespace fgr {
 	}
 
 	void Shader::operator=(const Shader& other) {
+		if (&other == this) return;
+
 		dispose();
+
+		vertex_code = other.vertex_code;
+		fragment_code = other.fragment_code;
+		geometry_code = other.geometry_code;
+
+		uniform_names = other.uniform_names;
+
+		if (other.loaded) compile(other.settings);
 	}
 
-	bool Shader::loadFromFile(const std::string& vertex_path, const std::string& fragment_path, const std::vector<std::string>& uniforms) {
-		graphics_check_external();
-		std::ifstream stream;
-		stream.open(executable_path + vertex_path, std::ios::ate | std::ios::binary);
-		if (!stream.is_open()) {
-			std::cerr << "Failed to load vertex shader\n";
-			return true;
+	Shader::Shader(const std::string& vertex_path, const std::string& fragment_path, const std::vector<std::string>& uniforms) : uniform_names(uniforms) {
+		vertex_code = flo::readFullFile(executable_path + vertex_path);
+		if (!vertex_code.size()) {
+			std::cerr << "Vertex shader '" + vertex_path + "' not found\n";
+			return;
 		}
-		stream.seekg(0, std::ios::end);
-		uint size = stream.tellg();
-		stream.seekg(0, std::ios::beg);
-		char* vertex_src = new char[size + 1];
-		stream.read(vertex_src, size);
-		vertex_src[size] = '\0';
+		vertex_code += '\0';
+		fragment_code = flo::readFullFile(executable_path + fragment_path);
+		if (!fragment_code.size()) {
+			std::cerr << "Fragment shader '" + fragment_path + "' not found\n";
+			return;
+		}
+		fragment_code += '\0';
+	}
 
+	Shader::Shader(const std::string& vertex_path, const std::string& fragment_path, const std::string& geometry_path, const std::vector<std::string>& uniforms) : uniform_names(uniforms) {
+		vertex_code = flo::readFullFile(executable_path + vertex_path);
+		if (!vertex_code.size()) {
+			std::cerr << "Vertex shader '" + vertex_path + "' not found\n";
+			return;
+		}
+		vertex_code += '\0';
+		fragment_code = flo::readFullFile(executable_path + fragment_path);
+		if (!fragment_code.size()) {
+			std::cerr << "Fragment shader '" + fragment_path + "' not found\n";
+			return;
+		}
+		fragment_code += '\0';
+		geometry_code = flo::readFullFile(executable_path + geometry_path);
+		if (!geometry_code.size()) {
+			std::cerr << "Geometry shader '" + geometry_path + "' not found\n";
+			return;
+		}
+		geometry_code += '\0';
+	}
+
+	bool Shader::compile(const std::string& _settings) {
+		graphics_check_external();
+
+		settings = _settings;
+
+		if (shader_program) glDeleteProgram(shader_program);
+		shader_program = 0;
+
+		std::string code = vertex_code;
+		for (int i = 0; i < code.size(); ++i) {
+			if (code[i] == '\n') {
+				code.insert(code.begin() + i + 1, settings.begin(), settings.end());
+				break;
+			}
+		}
+		char* code_ptr = code.data();
 		vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-		glShaderSource(vertex_shader, 1, &vertex_src, NULL);
+		glShaderSource(vertex_shader, 1, &code_ptr, NULL);
 		glCompileShader(vertex_shader);
 		int success;
 		char infoLog[512];
@@ -56,164 +117,68 @@ namespace fgr {
 		{
 			glGetShaderInfoLog(vertex_shader, 512, NULL, infoLog);
 			std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-		}
-
-		stream.close();
-		delete[] vertex_src;
-
-		stream.open(executable_path + fragment_path, std::ios::ate | std::ios::binary);
-		if (!stream.is_open()) {
-			std::cerr << "Failed to load fragment shader\n";
-			glDeleteShader(vertex_shader);
 			return true;
 		}
-		stream.seekg(0, std::ios::end);
-		size = stream.tellg();
-		stream.seekg(0, std::ios::beg);
-		char* fragment_src = new char[size + 1];
-		stream.read(fragment_src, size);
-		fragment_src[size] = '\0';
 
+		code = fragment_code;
+		for (int i = 0; i < code.size(); ++i) {
+			if (code[i] == '\n') {
+				code.insert(code.begin() + i + 1, settings.begin(), settings.end());
+				break;
+			}
+		}
+		code_ptr = code.data();
 		fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-		glShaderSource(fragment_shader, 1, &fragment_src, NULL);
+		glShaderSource(fragment_shader, 1, &code_ptr, NULL);
 		glCompileShader(fragment_shader);
 		glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
 		if (!success)
 		{
 			glGetShaderInfoLog(fragment_shader, 512, NULL, infoLog);
-			std::cerr << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+			std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+			return true;
 		}
 
-		stream.close();
-		delete[] fragment_src;
+		if (geometry_code.size()) {
+			code = geometry_code;
+			for (int i = 0; i < code.size(); ++i) {
+				if (code[i] == '\n') {
+					code.insert(code.begin() + i + 1, settings.begin(), settings.end());
+					break;
+				}
+			}
+			code_ptr = code.data();
+			geometry_shader = glCreateShader(GL_GEOMETRY_SHADER);
+			glShaderSource(geometry_shader, 1, &code_ptr, NULL);
+			glCompileShader(geometry_shader);
+			glGetShaderiv(geometry_shader, GL_COMPILE_STATUS, &success);
+			if (!success)
+			{
+				glGetShaderInfoLog(geometry_shader, 512, NULL, infoLog);
+				std::cout << "ERROR::SHADER::GEOMETRY::COMPILATION_FAILED\n" << infoLog << std::endl;
+				return true;
+			}
+		}
 
 		shader_program = glCreateProgram();
 		glAttachShader(shader_program, vertex_shader);
 		glAttachShader(shader_program, fragment_shader);
+		if (geometry_code.size()) glAttachShader(shader_program, geometry_shader);
 		glLinkProgram(shader_program);
 		glGetProgramiv(shader_program, GL_LINK_STATUS, &success);
 		if (!success) {
 			glGetProgramInfoLog(shader_program, 512, NULL, infoLog);
 			std::cerr << "ERROR::SHADER::PROGRAM::COMPILATION_FAILED\n" << infoLog << std::endl;
-		}
-
-		glDeleteShader(vertex_shader);
-		glDeleteShader(fragment_shader);
-
-		uniform_locations.resize(uniforms.size());
-		for (int i = 0; i < uniforms.size(); ++i) {
-			uniform_locations[i] = glGetUniformLocation(shader_program, uniforms[i].data());
-		}
-		transformations_uniform = glGetUniformLocation(shader_program, "transformations");
-
-		loaded = true;
-
-		graphics_check_error();
-
-		return 0;
-	}
-
-	bool Shader::loadFromFile(const std::string& vertex_path, const std::string& fragment_path, const std::string& geometry_path, const std::vector<std::string>& uniforms) {
-		graphics_check_external();
-
-		std::ifstream stream;
-		stream.open(executable_path + vertex_path, std::ios::ate | std::ios::binary);
-		if (!stream.is_open()) {
-			std::cerr << "Failed to load vertex shader\n";
 			return true;
-		}
-		stream.seekg(0, std::ios::end);
-		uint size = stream.tellg();
-		stream.seekg(0, std::ios::beg);
-		char* vertex_src = new char[size + 1];
-		stream.read(vertex_src, size);
-		vertex_src[size] = '\0';
-
-		vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-		glShaderSource(vertex_shader, 1, &vertex_src, NULL);
-		glCompileShader(vertex_shader);
-		int success;
-		char infoLog[512];
-		glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
-		if (!success)
-		{
-			glGetShaderInfoLog(vertex_shader, 512, NULL, infoLog);
-			std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-		}
-
-		stream.close();
-		delete[] vertex_src;
-
-		stream.open(executable_path + fragment_path, std::ios::ate | std::ios::binary);
-		if (!stream.is_open()) {
-			std::cerr << "Failed to load fragment shader\n";
-			glDeleteShader(vertex_shader);
-			return true;
-		}
-		stream.seekg(0, std::ios::end);
-		size = stream.tellg();
-		stream.seekg(0, std::ios::beg);
-		char* fragment_src = new char[size + 1];
-		stream.read(fragment_src, size);
-		fragment_src[size] = '\0';
-
-		fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-		glShaderSource(fragment_shader, 1, &fragment_src, NULL);
-		glCompileShader(fragment_shader);
-		glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
-		if (!success)
-		{
-			glGetShaderInfoLog(fragment_shader, 512, NULL, infoLog);
-			std::cerr << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
-		}
-
-		stream.close();
-		delete[] fragment_src;
-
-		stream.open(executable_path + geometry_path, std::ios::ate | std::ios::binary);
-		if (!stream.is_open()) {
-			std::cerr << "Failed to load geometry shader\n";
-			glDeleteShader(fragment_shader);
-			return true;
-		}
-		stream.seekg(0, std::ios::end);
-		size = stream.tellg();
-		stream.seekg(0, std::ios::beg);
-		char* geometry_src = new char[size + 1];
-		stream.read(geometry_src, size);
-		geometry_src[size] = '\0';
-
-		geometry_shader = glCreateShader(GL_GEOMETRY_SHADER);
-		glShaderSource(geometry_shader, 1, &geometry_src, NULL);
-		glCompileShader(geometry_shader);
-		glGetShaderiv(geometry_shader, GL_COMPILE_STATUS, &success);
-		if (!success)
-		{
-			glGetShaderInfoLog(geometry_shader, 512, NULL, infoLog);
-			std::cerr << "ERROR::SHADER::GEOMETRY::COMPILATION_FAILED\n" << infoLog << std::endl;
-		}
-
-		stream.close();
-		delete[] geometry_src;
-
-		shader_program = glCreateProgram();
-		glAttachShader(shader_program, vertex_shader);
-		glAttachShader(shader_program, fragment_shader);
-		glAttachShader(shader_program, geometry_shader);
-		glLinkProgram(shader_program);
-		glGetProgramiv(shader_program, GL_LINK_STATUS, &success);
-		if (!success) {
-			glGetProgramInfoLog(shader_program, 512, NULL, infoLog);
-			std::cerr << "ERROR::SHADER::PROGRAM::COMPILATION_FAILED\n" << infoLog << std::endl;
 		}
 
 		glDeleteShader(vertex_shader);
 		glDeleteShader(fragment_shader);
 		glDeleteShader(geometry_shader);
 
-		uniform_locations.resize(uniforms.size());
-		for (int i = 0; i < uniforms.size(); ++i) {
-			uniform_locations[i] = glGetUniformLocation(shader_program, uniforms[i].data());
+		uniform_locations.resize(uniform_names.size());
+		for (int i = 0; i < uniform_names.size(); ++i) {
+			uniform_locations[i] = glGetUniformLocation(shader_program, uniform_names[i].data());
 		}
 		transformations_uniform = glGetUniformLocation(shader_program, "transformations");
 
@@ -221,9 +186,9 @@ namespace fgr {
 
 		graphics_check_error();
 
-		return 0;
+		return false;
 	}
-
+	
 	void Shader::dispose() {
 		if (!window::graphicsInitialized()) return;
 
@@ -231,6 +196,8 @@ namespace fgr {
 		if (shader_program) glDeleteProgram(shader_program);
 		shader_program = 0;
 		graphics_check_error();
+
+		loaded = false;
 	}
 
 	void Shader::use() {

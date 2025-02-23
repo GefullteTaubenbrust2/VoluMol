@@ -21,6 +21,8 @@ namespace fgr {
 	}
 
 	void SpriteArray::operator=(const SpriteArray& other) {
+		if (&other == this) return;
+
 		dispose();
 
 		sprites = other.sprites;

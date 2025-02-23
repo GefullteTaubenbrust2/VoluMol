@@ -14,5 +14,7 @@ namespace fgr {
 
 	void setBlending(Blending blendmode);
 
+	Blending getBlending();
+
 	void setDepthTesting(bool depth_test);
 }

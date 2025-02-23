@@ -30,6 +30,8 @@ namespace fgr {
 	}
 
 	void Mesh::operator=(const Mesh& other) {
+		if (&other == this) return;
+
 		dispose();
 		if (other.VAO) {
 			init();

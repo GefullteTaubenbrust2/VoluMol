@@ -13,6 +13,8 @@ namespace fgr {
 	}
 
 	void TextureHandle3D::operator=(const TextureHandle3D& other) {
+		if (&other == this) return;
+
 		dispose();
 
 		width = other.width;

@@ -14,6 +14,8 @@ namespace fgr {
 	}
 
 	void FrameBuffer::operator=(const FrameBuffer& other) {
+		if (&other == this) return;
+
 		dispose(true);
 
 		if (other.inited) {
@@ -174,6 +176,8 @@ namespace fgr {
 	}
 
 	void FrameBufferMS::operator=(const FrameBufferMS& other) {
+		if (&other == this) return;
+
 		dispose();
 
 		if (other.inited) {
@@ -346,6 +350,8 @@ namespace fgr {
 	}
 
 	void MultiFrameBuffer::operator=(const MultiFrameBuffer& other) {
+		if (&other == this) return;
+
 		dispose();
 
 		if (other.inited) {

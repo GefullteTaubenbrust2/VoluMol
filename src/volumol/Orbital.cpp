@@ -342,8 +342,8 @@ namespace mol {
 
 		if (settings.cubemap_use_gpu) {
 			if (use_stos) {
-				if (!gto_shader.shader_program) {
-					sto_shader.loadFromFile("shaders/volumol/gto.vert", "shaders/volumol/gto.frag", "shaders/volumol/sto.geom", std::vector<std::string>{
+				if (!gto_shader.loaded) {
+					sto_shader = fgr::Shader("shaders/volumol/gto.vert", "shaders/volumol/gto.frag", "shaders/volumol/sto.geom", std::vector<std::string>{
 						"cubemap_origin",	// 0
 						"cubemap_size",		// 1
 						"layer_count",		// 2
@@ -352,6 +352,7 @@ namespace mol {
 						"alpha",			// 5
 						"coeff",			// 6
 					});
+					sto_shader.compile();
 				}
 
 				sto_shader.setVec3(0, map.origin);
@@ -359,8 +360,8 @@ namespace mol {
 				sto_shader.setInt(2, dimensions.z);
 			}
 			else {
-				if (!gto_shader.shader_program)  {
-					gto_shader.loadFromFile("shaders/volumol/gto.vert", "shaders/volumol/gto.frag", "shaders/volumol/gto.geom", std::vector<std::string>{
+				if (!gto_shader.loaded)  {
+					gto_shader = fgr::Shader("shaders/volumol/gto.vert", "shaders/volumol/gto.frag", "shaders/volumol/gto.geom", std::vector<std::string>{
 						"cubemap_origin",	// 0
 						"cubemap_size",		// 1
 						"layer_count",		// 2
@@ -369,6 +370,7 @@ namespace mol {
 						"alpha",			// 5
 						"coeff",			// 6
 					});
+					gto_shader.compile();
 				}
 
 				gto_shader.setVec3(0, map.origin);
@@ -583,11 +585,15 @@ namespace mol {
 
 		fgr::VertexArray va;
 		fgr::RenderTarget fbo;
-		if (settings.cubemap_use_gpu && !density_shader.shader_program) {
-			density_shader.loadFromFile("shaders/volumol/density.vert", "shaders/volumol/density.frag", "shaders/volumol/density.geom", std::vector<std::string>{"layer_count", "orbital", "occupation"});
+		if (settings.cubemap_use_gpu) {
+			if (!density_shader.loaded) {
+				density_shader = fgr::Shader("shaders/volumol/density.vert", "shaders/volumol/density.frag", "shaders/volumol/density.geom", std::vector<std::string>{"layer_count", "orbital", "occupation"});
+				density_shader.compile();
+			}
+			
 			density_shader.setInt(0, cubemap.texture.depth);
 			density_shader.setInt(1, fgr::TextureUnit::texture0);
-
+			
 			va.init();
 
 			va.vertices.resize(6 * cubemap.texture.depth);

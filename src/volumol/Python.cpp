@@ -168,6 +168,7 @@ DLLEXPORT void pyUpdateSettings(float* floats, float* vectors, int* ints, bool* 
 	settings.brightness						= floats[16];
 	settings.z_near							= floats[17];
 	settings.z_far							= floats[18];
+	settings.volumetric_gradient			= floats[19];
 
 	settings.ambient_color					= vec3FromFloats(vectors, 0);
 	settings.sun_color						= vec3FromFloats(vectors, 1);
@@ -188,6 +189,9 @@ DLLEXPORT void pyUpdateSettings(float* floats, float* vectors, int* ints, bool* 
 	settings.premulitply_color				= bools[1];
 	settings.cubemap_use_gpu				= bools[2];
 	settings.orthographic					= bools[3];
+	settings.volumetric_shadowmap			= bools[4];
+	settings.emissive_volume				= bools[5];
+	settings.volumetric_density_mode		= bools[6];
 
 	mol::Renderer::updateSettings(settings);
 }

@@ -242,6 +242,8 @@ namespace fgr {
 	}
 
 	void BitmapTextRenderer::operator=(const BitmapTextRenderer& other) {
+		if (&other == this) return;
+
 		dispose();
 
 		letter_array = other.letter_array;

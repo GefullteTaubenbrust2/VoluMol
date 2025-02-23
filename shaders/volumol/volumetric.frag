@@ -30,13 +30,12 @@ uniform float z_far;
 
 uniform sampler2DArray shadow_map;
 uniform int levels;
-uniform mat4[8] light_matrices;
-uniform float[8] layer_depths;
+uniform mat4[SHADOWMAP_LEVELS] light_matrices;
+uniform float[SHADOWMAP_LEVELS + 1] layer_depths;
 
 uniform float density_factor;
 uniform float density_cutoff;
-
-uniform bool orthographic;
+uniform float gradient_factor;
 
 vec3 light_step = sun_direction * light_distance / float(light_iterations);
 
@@ -108,9 +107,12 @@ vec2 rayBoxDst(vec3 boundsMin, vec3 boundsMax, vec3 rayOrigin, vec3 invRaydir) {
 	return vec2(dstToBox, dstToBox + dstInsideBox);
 }
 
-float toLinearDepth(float depth)  {
-	if (orthographic) return (z_far - z_near) * depth + z_near;
-	else return z_near * z_far / (z_far + depth * (z_near - z_far));
+float toLinearDepth(float depth) {
+#ifdef ORTHOGRAPHIC
+	return (z_far - z_near) * depth + z_near;
+#else
+	return z_near * z_far / (z_far + depth * (z_near - z_far));
+#endif
 }
 
 void main() {
@@ -140,9 +142,23 @@ void main() {
 
 		float local_density = density_factor * rho * dx;
 
+#ifdef DENSITY_MODE
+		vec3 local_color = mix(positive_color, negative_color, exp(-gradient_factor * rho));
+#else
+		vec3 local_color = (psi > 0.0 ? positive_color : negative_color);
+#endif
+
+#ifdef EMISSIVE_VOLUME
+		color += local_color * local_density;
+#else
 		float brightness = getBrightness(p);
-		brightness *= (1.0 - exp(-rho * density_factor)) * (1.0 - out_scatter_strength) + out_scatter_strength;
-		vec3 local_color = (psi > 0.0 ? positive_color : negative_color) * (ambient_color + sun_color * brightness);
+#ifdef VOLUMETRIC_SHADOWMAP
+		brightness *= sampleShadowMap(0, p);
+#endif
+		// In- and out-scattering for scatter volumes
+		brightness *= (1.0 - exp(-0.5 * rho * density_factor)) * (1.0 - out_scatter_strength) + out_scatter_strength;
+
+		local_color *= (ambient_color + sun_color * brightness);
 
 		float local_transmission = exp(-local_density);
 
@@ -151,9 +167,14 @@ void main() {
 		transmission *= local_transmission;
 
 		if (transmission < 0.0001) break;
+#endif
 	}
 
 	vec4 src = texture2D(background, screenspace_position * 0.5 + 0.5);
 
+#ifdef EMISSIVE_VOLUME
+	FragColor = max(vec4(0.0), vec4(src.rgb + color, src.a));
+#else
 	FragColor = max(vec4(0.0), vec4(blend3D(color, src.rgb, 1.0 - transmission, src.a), blendAlpha(1.0 - transmission, src.a)));
+#endif
 }

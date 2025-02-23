@@ -21,13 +21,15 @@ namespace fgr {
 		///<summary>
 		///The ID of the named program object. WARNING: read-only!
 		///</summary>
-		uint shader_program, vertex_shader, fragment_shader, geometry_shader;
+		uint shader_program = 0, vertex_shader = 0, fragment_shader = 0, geometry_shader = 0;
 		
 		///<summary>
-		///The location of the "transformations" uniform that should be present in the shader, else UB might result. WARNING: read-only!
+		///The location of the "transformations" uniform. WARNING: read-only!
 		///</summary>
 		uint transformations_uniform;
 		
+		std::string vertex_code, fragment_code, geometry_code;
+
 		///<summary>
 		///Is the Shader loaded? WARNING: read-only!
 		///</summary>
@@ -44,9 +46,19 @@ namespace fgr {
 
 		///<summary>
 		///A vector containing the uniform locations within the shader, the index is equal to the index of the appropriate name given on construction. 
-		/// WARNING: read-only
+		///WARNING: read-only
 		///</summary>
 		std::vector<uint> uniform_locations;
+
+		///<summary>
+		///The names of all uniforms.
+		///</summary>
+		std::vector<std::string> uniform_names;
+
+		///<summary>
+		///Settings for the shader code. Stored only for the = operator.
+		///</summary>
+		std::string settings;
 
 		Shader() = default;
 		
@@ -54,6 +66,23 @@ namespace fgr {
 		///Copying and assignment not possible.
 		///</summary>
 		Shader(const Shader& copy);
+		
+		///<summary>
+		///Load a shader with a vertex and fragment shader.
+		///</summary>
+		///<param name="vertex_path">The path of the vertex shader source file.</param>
+		///<param name="fragment_path">The path of the fragment shader source file.</param>
+		///<param name="uniforms">Names of the shader uniforms.</param>
+		Shader(const std::string& vertex_path, const std::string& fragment_path, const std::vector<std::string>& uniforms = std::vector<std::string>());
+
+		///<summary>
+		///Load a shader with a vertex, geometry and fragment shader.
+		///</summary>
+		///<param name="vertex_path">The path of the vertex shader source file.</param>
+		///<param name="geometry_path">The path of the geometry shader source file.</param>
+		///<param name="fragment_path">The path of the fragment shader source file.</param>
+		///<param name="uniforms">Names of the shader uniforms.</param>
+		Shader(const std::string& vertex_path, const std::string& fragment_path, const std::string& geometry_path, const std::vector<std::string>& uniforms = std::vector<std::string>());
 
 		///<summary>
 		///Copying and assignment not possible.
@@ -61,23 +90,11 @@ namespace fgr {
 		void operator=(const Shader& other);
 
 		///<summary>
-		///Load a shader with a vertex and fragment shader.
+		///Compile the shader program.
 		///</summary>
-		///<param name="vertex_path">The path of the vertex shader source file.</param>
-		///<param name="fragment_path">The path of the fragment shader source file.</param>
-		///<param name="uniforms">The names of all accessible uniform variables.</param>
-		///<returns>The success, false being a success.</returns>
-		bool loadFromFile(const std::string& vertex_path, const std::string& fragment_path, const std::vector<std::string>& uniforms = std::vector<std::string>());
-
-		///<summary>
-		 ///Load a shader with a vertex, geometry and fragment shader.
-		///</summary>
-		///<param name="vertex_path">The path of the vertex shader source file.</param>
-		///<param name="geometry_path">The path of the geometry shader source file.</param>
-		///<param name="fragment_path">The path of the fragment shader source file.</param>
-		///<param name="uniforms">The names of all accessible uniform variables.</param>
-		///<returns>The success, false being a success.</returns>
-		bool loadFromFile(const std::string& vertex_path, const std::string& fragment_path, const std::string& geometry_path, const std::vector<std::string>& uniforms = std::vector<std::string>());
+		///<param name="settings">Settings to add to the shader code.</param>
+		///<returns>Success of the operation, false being successful.</returns>
+		bool compile(const std::string& settings = "");
 
 		///<summary>
 		///Destroy the shader programs.

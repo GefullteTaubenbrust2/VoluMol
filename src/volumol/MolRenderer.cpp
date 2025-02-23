@@ -37,7 +37,7 @@ namespace mol::Renderer {
 	glm::vec3 camera_position, camera_direction;
 
 	void init() {
-		mesh_shader.loadFromFile("shaders/volumol/basic.vert", "shaders/volumol/basic.frag", std::vector<std::string>{
+		mesh_shader = fgr::Shader("shaders/volumol/basic.vert", "shaders/volumol/basic.frag", std::vector<std::string>{
 			"model",			// 0
 			"view",				// 1
 			"projection",		// 2
@@ -46,13 +46,16 @@ namespace mol::Renderer {
 			"ambient_color",	// 5
 			"camera_pos",		// 6
 			"shadow_map",		// 7
-			"levels",			// 8
-			"light_matrices",	// 9
-			"layer_depths",		// 10
-			"offset",			// 11
-			"camera_dir"		// 12
+			"light_matrices",	// 8
+			"layer_depths",		// 9
+			"offset",			// 10
+			"camera_dir"		// 11
 		});
-		geometry_shader.loadFromFile("shaders/volumol/geometry.vert", "shaders/volumol/geometry.frag", std::vector<std::string>{"model", "view", "projection", "offset"});
+		mesh_shader.compile("#define SHADOWMAP_LEVELS 8\n");
+
+		geometry_shader = fgr::Shader("shaders/volumol/geometry.vert", "shaders/volumol/geometry.frag", std::vector<std::string>{"model", "view", "projection", "offset"});
+		geometry_shader.compile();
+
 		molecule_mesh.init();
 		isosurface_mesh.init();
 		fbo_ms.init(fgr::window::width, fgr::window::height, GL_RGBA16F);
@@ -65,7 +68,8 @@ namespace mol::Renderer {
 		ssao_blur.init();
 		geometry_fbo.allocateAttachments(2);
 		geometry_fbo.init(fgr::window::width, fgr::window::height, GL_CLAMP_TO_EDGE, GL_LINEAR);
-		ssao_shader.loadFromFile("shaders/volumol/ssao.vert", "shaders/volumol/ssao.frag", std::vector<std::string>{
+
+		ssao_shader = fgr::Shader("shaders/volumol/ssao.vert", "shaders/volumol/ssao.frag", std::vector<std::string>{
 			"positions",		// 0
 			"normals",			// 1
 			"ssao_offsets",		// 2
@@ -75,7 +79,9 @@ namespace mol::Renderer {
 			"rotation_offset",	// 6
 			"iterations",		// 7
 		});
-		merge_shader.loadFromFile("shaders/volumol/merge.vert", "shaders/volumol/merge.frag", std::vector<std::string>{
+		ssao_shader.compile();
+
+		merge_shader = fgr::Shader("shaders/volumol/merge.vert", "shaders/volumol/merge.frag", std::vector<std::string>{
 			"texture",			// 0
 			"ssao",				// 1
 			"outlines",			// 2
@@ -83,9 +89,15 @@ namespace mol::Renderer {
 			"ssao_exponent",	// 4
 			"outline_radius",	// 5
 		});
-		post_shader.loadFromFile("shaders/volumol/post.vert", "shaders/volumol/post.frag", std::vector<std::string>{"texture", "clear_color", "taa_alpha", "premultiply", "brightness"});
-		outline_shader.loadFromFile("shaders/volumol/outline.vert", "shaders/volumol/outline.frag", std::vector<std::string>{"depth_tex", "z_near", "z_far", "orthographic"});
-		volumetric_shader.loadFromFile("shaders/volumol/volumetric.vert", "shaders/volumol/volumetric.frag", std::vector<std::string>{
+		merge_shader.compile();
+
+		post_shader = fgr::Shader("shaders/volumol/post.vert", "shaders/volumol/post.frag", std::vector<std::string>{"texture", "clear_color", "taa_alpha", "brightness"});
+		post_shader.compile("#define PREMULTIPLY_COLOR 1\n");
+
+		outline_shader = fgr::Shader("shaders/volumol/outline.vert", "shaders/volumol/outline.frag", std::vector<std::string>{"depth_tex", "z_near", "z_far"});
+		outline_shader.compile();
+
+		volumetric_shader = fgr::Shader("shaders/volumol/volumetric.vert", "shaders/volumol/volumetric.frag", std::vector<std::string>{
 			"proj_inv",			// 0
 			"view",				// 1
 			"camera_position",	// 2
@@ -104,15 +116,16 @@ namespace mol::Renderer {
 			"z_near",			// 15
 			"z_far",			// 16
 			"shadow_map",		// 17
-			"levels",			// 18
-			"light_matrices",	// 19
-			"layer_depths",		// 20
-			"background",		// 21
-			"density_factor",	// 22
-			"density_cutoff",	// 23
-			"camera_dir",		// 24
-			"orthographic"		// 25
+			"light_matrices",	// 18
+			"layer_depths",		// 19
+			"background",		// 20
+			"density_factor",	// 21
+			"density_cutoff",	// 22
+			"camera_dir",		// 23
+			"gradient_factor"	// 24
 		});
+		volumetric_shader.compile("#define SHADOWMAP_LEVELS 1\n#define VOLUMETRIC_SHADOWMAP 1\n");
+
 		csm = fgr::CascadedShadowMap(1, 2048, 0.25f);
 		csm.init();
 
@@ -131,12 +144,32 @@ namespace mol::Renderer {
 	}
 
 	void updateSettings(const RenderProperties& _settings) {
+		std::string definitions = "#define SHADOWMAP_LEVELS 1\n";
+		if (_settings.volumetric_shadowmap) definitions += "#define VOLUMETRIC_SHADOWMAP 1\n";
+		if (_settings.orthographic) definitions += "#define ORTHOGRAPHIC 1\n";
+		if (_settings.emissive_volume) definitions += "#define EMISSIVE_VOLUME 1\n";
+		if (_settings.premulitply_color) definitions += "#define PREMULTIPLY_COLOR 1\n";
+		if (_settings.volumetric_density_mode) definitions += "#define DENSITY_MODE 1\n";
+
+		if (
+		_settings.orthographic				!= settings.orthographic			|| 
+		_settings.volumetric_shadowmap		!= settings.volumetric_shadowmap	||
+		_settings.emissive_volume			!= settings.emissive_volume			||
+		_settings.premulitply_color			!= settings.premulitply_color		||
+		_settings.volumetric_density_mode	!= settings.volumetric_density_mode
+		) {
+			mesh_shader.compile(definitions);
+			volumetric_shader.compile(definitions);
+			outline_shader.compile(definitions);
+			post_shader.compile(definitions);
+		}
+
 		settings = _settings;
 		glm::vec3 sun_position = glm::mat3(model_matrix) * settings.sun_position;
 		mesh_shader.setVec3(3, glm::normalize(sun_position));
 		mesh_shader.setVec3(4, glm::pow(settings.sun_color, glm::vec3(2.2)));
 		mesh_shader.setVec3(5, glm::pow(settings.ambient_color, glm::vec3(2.2)));
-		mesh_shader.setVec4(12, glm::vec4(glm::mat3(model_matrix) * camera_direction, settings.orthographic));
+		mesh_shader.setVec3(11, glm::vec3(glm::mat3(model_matrix) * camera_direction));
 		volumetric_shader.setVec3(7, glm::normalize(sun_position));
 		volumetric_shader.setVec3(8, glm::pow(settings.sun_color, glm::vec3(2.2)));
 		volumetric_shader.setVec3(9, glm::pow(settings.ambient_color, glm::vec3(2.2)));
@@ -147,9 +180,9 @@ namespace mol::Renderer {
 		volumetric_shader.setVec3(14, glm::pow(settings.mo_colors[1], glm::vec3(2.2)));
 		volumetric_shader.setFloat(15, settings.z_near);
 		volumetric_shader.setFloat(16, settings.z_far);
-		volumetric_shader.setFloat(22, settings.volumetric_density);
-		volumetric_shader.setFloat(23, settings.volumetric_cutoff);
-		volumetric_shader.setInt(25, settings.orthographic);
+		volumetric_shader.setFloat(21, settings.volumetric_density);
+		volumetric_shader.setFloat(22, settings.volumetric_cutoff);
+		volumetric_shader.setFloat(24, settings.volumetric_gradient);
 		ssao_shader.setFloat(3, settings.ao_radius);
 		ssao_shader.setFloat(4, settings.ao_exponent);
 		ssao_shader.setInt(7, settings.ao_iterations);
@@ -157,11 +190,9 @@ namespace mol::Renderer {
 		merge_shader.setFloat(4, settings.ao_exponent);
 		merge_shader.setFloat(5, settings.outline_radius);
 		post_shader.setVec3(1, settings.clear_color);
-		post_shader.setFloat(3, settings.premulitply_color);
-		post_shader.setFloat(4, settings.brightness);
+		post_shader.setFloat(3, settings.brightness);
 		outline_shader.setFloat(1, settings.z_near);
 		outline_shader.setFloat(2, settings.z_far);
-		outline_shader.setInt(3, settings.orthographic);
 		ssao_blur.blur_radius = 2.f + glm::min(settings.outline_radius, 3.f);
 		outline_blur.blur_radius = settings.outline_radius;
 		const uint taa_size = settings.taa_quality;
@@ -253,9 +284,9 @@ namespace mol::Renderer {
 		camera_position = position;
 		camera_direction = direction;
 		mesh_shader.setVec3(6, p);
-		mesh_shader.setVec4(12, glm::vec4(d, settings.orthographic));
+		mesh_shader.setVec3(11, glm::vec3(glm::mat3(model_matrix) * camera_direction));
 		volumetric_shader.setVec3(2, p);
-		volumetric_shader.setVec3(24, d);
+		volumetric_shader.setVec3(23, d);
 	}
 
 	void renderFrame(uint width, uint height) {
@@ -270,6 +301,7 @@ namespace mol::Renderer {
 
 		taa_fbo.clear(glm::vec4(0.0));
 
+		csm.clear();
 		csm.drawShadows(molecule_mesh);
 		if (isosurface_mesh.vertices.size()) csm.drawShadows(isosurface_mesh);
 
@@ -279,7 +311,7 @@ namespace mol::Renderer {
 
 			fgr::setBlending(fgr::Blending::none);
 
-			mesh_shader.setVec2(11, taa_jitter_offsets[i] / glm::vec2(width, height));
+			mesh_shader.setVec2(10, taa_jitter_offsets[i] / glm::vec2(width, height));
 			geometry_shader.setVec2(3, taa_jitter_offsets[i] / glm::vec2(width, height));
 
 			mesh_shader.setMat4(0, glm::mat4(1.0));
@@ -359,12 +391,12 @@ namespace mol::Renderer {
 				cubemap.texture.bindToUnit(fgr::TextureUnit::texture0);
 				geometry_fbo.bindDepthTexture(fgr::TextureUnit::texture1);
 				fbo2.bindContent(fgr::TextureUnit::texture2);
-				csm.bindUniforms(volumetric_shader, 17, 8, fgr::TextureUnit::texture3);
+				csm.bindUniforms(volumetric_shader, 17, fgr::TextureUnit::texture3);
 				volumetric_shader.setMat4(0, glm::inverse(view.projection));
 				volumetric_shader.setMat4(1, view.view);
 				volumetric_shader.setInt(3, fgr::TextureUnit::texture0);
 				volumetric_shader.setInt(6, fgr::TextureUnit::texture1);
-				volumetric_shader.setInt(21, fgr::TextureUnit::texture2);
+				volumetric_shader.setInt(20, fgr::TextureUnit::texture2);
 
 				fgr::drawRectangle(glm::mat3(1.), volumetric_shader);
 				fbo1.unbind();

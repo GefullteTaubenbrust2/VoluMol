@@ -10,8 +10,6 @@ uniform vec3 clear_color;
 
 uniform float taa_alpha;
 
-uniform float premultiply;
-
 uniform float brightness;
 
 out vec4 FragColor;
@@ -32,13 +30,22 @@ void main() {
 	vec3 col = vec3(0.0);
 
 	vec4 s = texture2D(texture, texCoord);
+	
+#if defined(EMISSIVE_VOLUME) || defined(PREMULTIPLY_COLOR)
 	col = s.rgb;
+#else
+	col = s.rgb * s.a;
+#endif
 
 	col = col / (col + vec3(1.0));
 
 	col = min(pow(col, vec3(1.0 / 2.2)) * brightness, 1.0);
 
-	col = col * (s.a * premultiply + 1.0 - premultiply) + clear_color * (1.0 - s.a);
+#if defined(EMISSIVE_VOLUME) || !defined(PREMULTIPLY_COLOR)
+	col = col + clear_color * (1.0 - s.a);
+#else
+	col = col * s.a + clear_color * (1.0 - s.a);
+#endif
 
 	col += screen_space_dither(gl_FragCoord.xy);
 

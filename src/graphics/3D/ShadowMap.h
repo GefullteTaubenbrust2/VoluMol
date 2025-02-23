@@ -31,9 +31,11 @@ namespace fgr {
 
 		void fitScene(const std::vector<glm::vec3>& positions, glm::vec3 sun_position, float tolerance);
 
+		void clear();
+
 		void drawShadows(Mesh& mesh);
 
-		void bindUniforms(Shader& shader, uint first_uniform, uint mat_count = 8, TextureUnit unit = TextureUnit::texture1);
+		void bindUniforms(Shader& shader, uint first_uniform, TextureUnit unit = TextureUnit::texture1);
 
 		void dispose();
 

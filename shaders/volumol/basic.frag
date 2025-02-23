@@ -12,10 +12,9 @@ uniform vec3 sun_color;
 uniform vec3 ambient_color;
 uniform vec3 camera_pos;
 uniform sampler2DArray shadow_map;
-uniform int levels;
-uniform mat4[8] light_matrices;
-uniform float[8] layer_depths;
-uniform vec4 camera_dir;
+uniform mat4[SHADOWMAP_LEVELS] light_matrices;
+uniform float[SHADOWMAP_LEVELS + 1] layer_depths;
+uniform vec3 camera_dir;
 
 #define PI 3.141592653589
 
@@ -93,7 +92,11 @@ float smoothShadow(int level, vec3 pos) {
 void main() {
 	vec3 fNormal = normalize(normal);
 	
-	vec3 view_vector = mix(normalize(camera_pos - vertPos), -camera_dir.xyz, camera_dir.w);
+#ifdef ORTHOGRAPHIC
+	vec3 view_vector = camera_dir;
+#else
+	vec3 view_vector = normalize(camera_pos - vertPos);
+#endif
 
 	vec3 baseColor = pow(vertColor, vec3(2.2));
 
@@ -120,7 +123,7 @@ void main() {
 	float fresnel_factor = max(0.0, dot(fNormal, view_vector));
 
 	int level = -1;
-	for (int i = 0; i < levels; i++) {
+	for (int i = 0; i < SHADOWMAP_LEVELS; i++) {
 		if (gl_FragCoord.z / gl_FragCoord.w < layer_depths[i + 1]) {
 			level = i;
 			break;

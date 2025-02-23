@@ -10,8 +10,10 @@
 #include "Sprite.h"
 
 namespace fgr {
+	Blending current_blendmode;
 
 	void setBlending(Blending blendmode) {
+		current_blendmode = blendmode;
 		graphics_check_external();
 		switch (blendmode) {
 		case Blending::none:
@@ -34,6 +36,10 @@ namespace fgr {
 			glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
 		}
 		graphics_check_error();
+	}
+
+	Blending getBlending() {
+		return current_blendmode;
 	}
 
 	void setDepthTesting(bool depth_test) {

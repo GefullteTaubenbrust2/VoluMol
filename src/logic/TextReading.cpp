@@ -48,4 +48,19 @@ namespace flo {
 
 		return result;
 	}
+
+	std::string readFullFile(const std::string& path) {
+		std::ifstream file;
+		std::string result;
+		file.open(path);
+		if (!file.is_open()) return result;
+
+		while (file) {
+			std::string str;
+			safeGetline(file, str);
+			result += str + '\n';
+		}
+
+		return result;
+	}
 }

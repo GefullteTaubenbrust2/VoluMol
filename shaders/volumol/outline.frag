@@ -6,13 +6,15 @@ in vec2 texCoord;
 uniform sampler2D depth_tex;
 uniform float z_near;
 uniform float z_far;
-uniform bool orthographic;
 
 out vec4 FragColor;
 
 float linearize_depth(float depth) {
-	if (orthographic) return (z_far - z_near) * depth + z_near;
-	else return z_near * z_far / (z_far + depth * (z_near - z_far));
+#ifdef ORTHOGRAPHIC
+	return (z_far - z_near) * depth + z_near;
+#else
+	return z_near * z_far / (z_far + depth * (z_near - z_far));
+#endif
 }
 
 float smoothStep(float x0, float x1, float x) {
