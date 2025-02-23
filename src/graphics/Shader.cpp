@@ -15,8 +15,8 @@ namespace fgr {
 		Shader::basic = Shader("shaders/basic.vert", "shaders/basic.frag", std::vector<std::string>{"tint"});
 		//Shader::basic_instanced = Shader("shaders/instanced/basic.vert", "shaders/basic.frag", std::vector<std::string>{});
 		//Shader::line = Shader("shaders/line.vert", "shaders/basic.frag", "shaders/line.geom", std::vector<std::string>{"screen_dimensions", "line_thickness"});
-		Shader::line_instanced = Shader("shaders/instanced/line.vert", "shaders/basic.frag", "shaders/line.geom", std::vector<std::string>{"screen_dimensions", "line_thickness"});
-		//Shader::textured = Shader("shaders/textured.vert", "shaders/textured.frag", std::vector<std::string>{"texture"});
+		//Shader::line_instanced = Shader("shaders/instanced/line.vert", "shaders/basic.frag", "shaders/line.geom", std::vector<std::string>{"screen_dimensions", "line_thickness"});
+		Shader::textured = Shader("shaders/textured.vert", "shaders/textured.frag", std::vector<std::string>{"texture"});
 		//Shader::textured_instanced = Shader("shaders/instanced/textured.vert", "shaders/textured.frag", std::vector<std::string>{"texture"});
 		//Shader::sprites_instanced = Shader("shaders/instanced/sprite.vert", "shaders/instanced/sprite.frag", std::vector<std::string>{"textures"});
 		//Shader::sprites_instanced_depth = Shader("shaders/instanced/sprite.vert", "shaders/instanced/depthsprite.frag", std::vector<std::string>{"textures"});
