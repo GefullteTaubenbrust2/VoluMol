@@ -49,6 +49,7 @@ Controls the functions of the program. Some settings take effect at all times, o
 |`brightness`|`float`| Controls how much the image is brightened during post processing. Beware that values beyond `1.` can cause colors to exceed the screen's range and clip. |`1.`|
 |`z_near`|`float`| Camera near clipping plane. Small values mean you can get closer to objects before they clip, but also decrease depth resolution. |`0.3`|
 |`z_far`|`float`| Camera far clipping plane. This essentially controls how far you can see, but very large values decrease depth resolution. |`300.`|
+|`volumetric_gradient`|`float`| Effective only if `volumetric_color_mode = True` and controls the color gradient. Higher values mean the color changes more strongly with increasing function values.|`1.`|
 |`ambient_color`|`tuple`| RGB values for ambient light color. Higher values mean shadows will be weaker. |`(0.25, 0.25, 0.25)`|
 |`sun_color`|`tuple`| RGB values of the sun's color. Values can exceed `1.` due to tone mapping. |`(2., 2., 2.)`|
 |`sun_position`|`tuple`| Vector describing the position of the sun in the "sky". Need not be normalized. |`(2., 1., 1.)`|
@@ -63,9 +64,12 @@ Controls the functions of the program. Some settings take effect at all times, o
 |`cubemap_thread_count`|`int`| CG: Controls how many CPU threads are used to render cubemaps when use of the GPU is disabled. |`8`|
 |`ao_iterations`|`int`| Iterations used for ambient occlusion. This affects both performance and visual quality. |`16`|
 |`smooth_bonds`|`bool`| MMG: When set to `True`, bonds are drawn with smooth color gradients between atoms. |`False`|
-|`premultiply_color`|`bool`| Should color be premultiplied before blending onto the background? This should be set to `True` for white backgrounds due to clipping and `False` for black backgrounds. |`True`|
+|`premultiply_color`|`bool`| Should color be premultiplied before blending onto the background? This should be set to `True` for white backgrounds due to clipping and `False` for black backgrounds. Only effective if `emissive_volume = False`. |`True`|
 |`cubemap_use_gpu`|`bool`| CG: Use the GPU to render cubemaps. There is not really a downside to enabling this, but a huge performance downside to disabling. Just keep this as `True`. |`True`|
 |`orthographic`|`bool`| Use orthographic projection for the camera. Note that it is a little tricky to control because you can't get a sense of depth, but things still clip in and out of existence at the near and far plane. |`False`|
+|`volumetric_shadowmap`|`bool`| Controls wether or not the ball-stick model and isosurfaces should cast a shadow on volumes. This has a slightly negative performance impact.|`True`|
+|`emissive_volume`|`bool`| When set to `True`, an emissive volume is used for volumetrics (looks a bit like plasma). When set to `False`, a scatter volume (looks more like clouds/smoke) is used instead. The emissive volume is computationally much cheaper.|`False`|
+|`volumetric_color_mode`|`bool`| Controls how colors for volumetrics are calculated. When set to `False`, MOs are colored based on sign, whereas when set to `True`, `mo_color_0` and `mo_color_1` are mixed based on function values. The mixing can be controlled with `volumetric_gradient`. |`False`|
 
 
 ### `MOInfo`
