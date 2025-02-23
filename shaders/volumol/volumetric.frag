@@ -87,7 +87,7 @@ float getBrightness(vec3 pos) {
 
 vec3 blend3D(vec3 A, vec3 B, float alphaA, float alphaB) {
     float alphaC = alphaA + (1. - alphaA) * alphaB;
-    return (alphaA * A + (1. - alphaA) * alphaB * B) / alphaC;
+    return (alphaA * A + (1. - alphaA) * alphaB * B) / max(alphaC, 0.00000001);
 }
 
 float blendAlpha(float alphaA, float alphaB) {
@@ -140,8 +140,8 @@ void main() {
 
 		float local_density = density_factor * rho * dx;
 
-		float brightness = getBrightness(p) * sampleShadowMap(0, p);
-		brightness *= (1.0 - exp(-16.0 * rho)) * (1.0 - out_scatter_strength) + out_scatter_strength;
+		float brightness = getBrightness(p);
+		brightness *= (1.0 - exp(-rho * density_factor)) * (1.0 - out_scatter_strength) + out_scatter_strength;
 		vec3 local_color = (psi > 0.0 ? positive_color : negative_color) * (ambient_color + sun_color * brightness);
 
 		float local_transmission = exp(-local_density);
