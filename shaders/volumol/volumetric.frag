@@ -17,6 +17,7 @@ uniform vec3 cubemap_size;
 uniform vec3 sun_direction;
 uniform vec3 sun_color;
 uniform vec3 ambient_color;
+uniform vec2 offset;
 
 uniform int iterations;
 uniform int light_iterations;
@@ -46,7 +47,7 @@ vec3 light_step = sun_direction * light_distance / float(light_iterations);
 // NOTE: `frag_coord` is in pixels (i.e. not normalized UV).
 float screen_space_dither(highp vec2 uv) {
 	// Iestyn's RGB dither (7 asm instructions) from Portal 2 X360, slightly modified for VR.
-	float dither = dot(vec2(171.0, 231.0), uv);
+	float dither = dot(vec2(171.0, 231.0), uv + offset);
 	dither = fract(dither / 103.0);
 
 	// Subtract 0.5 to avoid slightly brightening the whole viewport.

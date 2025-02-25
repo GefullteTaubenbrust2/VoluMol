@@ -122,7 +122,8 @@ namespace mol::Renderer {
 			"density_factor",	// 21
 			"density_cutoff",	// 22
 			"camera_dir",		// 23
-			"gradient_factor"	// 24
+			"gradient_factor",	// 24
+			"offset",			// 25
 		});
 		volumetric_shader.compile("#define SHADOWMAP_LEVELS 1\n#define VOLUMETRIC_SHADOWMAP 1\n");
 
@@ -397,6 +398,7 @@ namespace mol::Renderer {
 				volumetric_shader.setInt(3, fgr::TextureUnit::texture0);
 				volumetric_shader.setInt(6, fgr::TextureUnit::texture1);
 				volumetric_shader.setInt(20, fgr::TextureUnit::texture2);
+				volumetric_shader.setVec2(25, taa_jitter_offsets[i] * (float)settings.taa_quality);
 
 				fgr::drawRectangle(glm::mat3(1.), volumetric_shader);
 				fbo1.unbind();

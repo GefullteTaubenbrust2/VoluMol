@@ -71,7 +71,7 @@ class Settings:
     cylinder_resolution = 32
     volumetric_iterations = 100
     volumetric_light_iterations = 5
-    taa_quality = 1
+    aa_quality = 1
     cubemap_thread_count = 8
     ao_iterations = 16
 
@@ -236,7 +236,7 @@ def updateSettings(settings):
     ints[1] = settings.cylinder_resolution
     ints[2] = settings.volumetric_iterations
     ints[3] = settings.volumetric_light_iterations
-    ints[4] = settings.taa_quality
+    ints[4] = settings.aa_quality
     ints[5] = settings.cubemap_thread_count
     ints[6] = settings.ao_iterations
 
