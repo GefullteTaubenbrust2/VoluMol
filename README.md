@@ -130,7 +130,7 @@ Transforms the molecule in space so that three atoms lie in a specified plane.
 - `dir1`: `atom0` and `atom1` will lie on a ray originating at `pos0` and pointing in the direction `dir1`.
 - `dir2`: `atom0` and `atom2` will lie on a ray originating at `pos0` and pointing (roughly, the true vector will be orthogonalized) in the direction `dir2`.
 
-Example:\
+#### Example:
 A water molecule with atoms: 0 - Hydrogen, 1 - Oxygen, 2 - Hydrogen.\
 Say we want to transform this molecule so it lies on the XY plane and the hydrogen atoms are aligned with the x-axis. We can achieve this using:
 ```python
