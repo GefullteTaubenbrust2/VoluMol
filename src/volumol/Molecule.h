@@ -74,7 +74,7 @@ namespace mol {
 		float volumetric_gradient = 1.f;
 		bool volumetric_shadowmap = true;
 		bool emissive_volume = false;
-		bool volumetric_density_mode = false;
+		bool volumetric_color_mode = false;
 
 		glm::vec3 clear_color = glm::vec3(1.0);
 		bool premulitply_color = true;

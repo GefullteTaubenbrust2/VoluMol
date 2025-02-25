@@ -129,18 +129,28 @@ DLLEXPORT void pySetCameraOrientation(float px, float py, float pz, float dx, fl
 }
 
 DLLEXPORT void pyGetCameraOrientation(float* position, float* direction) {
-	position[0] = mol::Renderer::camera_position.x;
-	position[1] = mol::Renderer::camera_position.y;
-	position[2] = mol::Renderer::camera_position.z;
-	direction[0] = mol::Renderer::camera_direction.x;
-	direction[1] = mol::Renderer::camera_direction.y;
-	direction[2] = mol::Renderer::camera_direction.z;
+	position[0]		= mol::Renderer::camera_position.x;
+	position[1]		= mol::Renderer::camera_position.y;
+	position[2]		= mol::Renderer::camera_position.z;
+	direction[0]	= mol::Renderer::camera_direction.x;
+	direction[1]	= mol::Renderer::camera_direction.y;
+	direction[2]	= mol::Renderer::camera_direction.z;
 }
 
-DLLEXPORT void pyElementProperties(int Z, float r, float g, float b, float roughness, float metallicity) {
-	mol::settings.materials[Z].color = glm::vec3(r, g, b);
-	mol::settings.materials[Z].roughness = roughness;
-	mol::settings.materials[Z].metallicity = metallicity;
+DLLEXPORT void pySetElementProperties(int Z, float r, float g, float b, float roughness, float metallicity) {
+	if (Z < 0 || Z > 118) return;
+	mol::settings.materials[Z].color		= glm::vec3(r, g, b);
+	mol::settings.materials[Z].roughness	= roughness;
+	mol::settings.materials[Z].metallicity	= metallicity;
+}
+
+DLLEXPORT void pyGetElementProperties(int Z, float* color, float& roughness, float& metallicity) {
+	if (Z < 0 || Z > 118) return;
+	color[0]		= mol::settings.materials[Z].color.r;
+	color[1]		= mol::settings.materials[Z].color.g;
+	color[2]		= mol::settings.materials[Z].color.b;
+	roughness		= mol::settings.materials[Z].roughness;
+	metallicity		= mol::settings.materials[Z].metallicity;
 }
 
 DLLEXPORT void pyUpdateSettings(float* floats, float* vectors, int* ints, bool* bools) {
@@ -191,7 +201,7 @@ DLLEXPORT void pyUpdateSettings(float* floats, float* vectors, int* ints, bool* 
 	settings.orthographic					= bools[3];
 	settings.volumetric_shadowmap			= bools[4];
 	settings.emissive_volume				= bools[5];
-	settings.volumetric_density_mode		= bools[6];
+	settings.volumetric_color_mode			= bools[6];
 
 	mol::Renderer::updateSettings(settings);
 }

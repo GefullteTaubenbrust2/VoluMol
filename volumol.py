@@ -30,7 +30,8 @@ __library.pyCubemapResolution.argtypes = [ctypes.c_int]
 __library.pyMOCubemap.argtypes = [ctypes.c_int]
 __library.pySetCameraOrientation.argtypes = [ctypes.c_float, ctypes.c_float, ctypes.c_float, ctypes.c_float, ctypes.c_float, ctypes.c_float]
 __library.pyGetCameraOrientation.argtypes = [ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_float)]
-__library.pyElementProperties.argtypes = [ctypes.c_int, ctypes.c_float, ctypes.c_float, ctypes.c_float, ctypes.c_float, ctypes.c_float]
+__library.pySetElementProperties.argtypes = [ctypes.c_int, ctypes.c_float, ctypes.c_float, ctypes.c_float, ctypes.c_float, ctypes.c_float]
+__library.pyGetElementProperties.argtypes = [ctypes.c_int, ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_float)]
 __library.pyUpdateSettings.argtypes = [ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_bool)]
 __library.pySaveImage.argtypes = [ctypes.c_char_p, ctypes.c_int, ctypes.c_int]
 __library.pySetPath.argtypes = [ctypes.c_wchar_p]
@@ -188,7 +189,14 @@ def getCameraOrientation():
     return (position[0], position[1], position[2]), (direction[0], direction[1], direction[2])
 
 def setElementProperties(Z, color, roughness, metallic):
-    __library.pyElementProperties(Z, color[0], color[1], color[2], roughness, metallic)
+    __library.pySetElementProperties(Z, color[0], color[1], color[2], roughness, metallic)
+
+def getElementProperties(Z):
+    color = (ctypes.c_float * 3)()
+    roughness = ctypes.c_float()
+    metallic = ctypes.c_float()
+    __library.pyGetElementProperties(Z, color, ctypes.pointer(roughness), ctypes.pointer(metallic))
+    return ((color[0], color[1], color[2]), roughness, metallic)
 
 def updateSettings(settings):
     floats = (ctypes.c_float * 20)(

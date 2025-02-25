@@ -149,14 +149,14 @@ namespace mol::Renderer {
 		if (_settings.orthographic) definitions += "#define ORTHOGRAPHIC 1\n";
 		if (_settings.emissive_volume) definitions += "#define EMISSIVE_VOLUME 1\n";
 		if (_settings.premulitply_color) definitions += "#define PREMULTIPLY_COLOR 1\n";
-		if (_settings.volumetric_density_mode) definitions += "#define DENSITY_MODE 1\n";
+		if (_settings.volumetric_color_mode) definitions += "#define DENSITY_MODE 1\n";
 
 		if (
-		_settings.orthographic				!= settings.orthographic			|| 
-		_settings.volumetric_shadowmap		!= settings.volumetric_shadowmap	||
-		_settings.emissive_volume			!= settings.emissive_volume			||
-		_settings.premulitply_color			!= settings.premulitply_color		||
-		_settings.volumetric_density_mode	!= settings.volumetric_density_mode
+		_settings.orthographic			!= settings.orthographic			|| 
+		_settings.volumetric_shadowmap	!= settings.volumetric_shadowmap	||
+		_settings.emissive_volume		!= settings.emissive_volume			||
+		_settings.premulitply_color		!= settings.premulitply_color		||
+		_settings.volumetric_color_mode	!= settings.volumetric_color_mode
 		) {
 			mesh_shader.compile(definitions);
 			volumetric_shader.compile(definitions);
