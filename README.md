@@ -89,11 +89,11 @@ Controls the functions of the program. Some settings take effect at all times, o
 
 ## Functions
 ### `createWindow()`
-Opens a window and initializes VoluMol. After this is called, `dispose()` must be called once all operations are complete.
+Opens a window and initializes VoluMol. After this is called, `dispose()` must be called at the end of the script.
 
 
 ### `createContext()`
-Serves as an alternative to `createWindow` without opening a visible window. `dispose()` must be called once all operations are complete.
+Serves as an alternative to `createWindow` without opening a visible window. `dispose()` must be called at the end of the script.
 
 
 ### `closeWindow()`
