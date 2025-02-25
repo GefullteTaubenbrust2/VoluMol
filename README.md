@@ -80,7 +80,7 @@ Controls the functions of the program. Some settings take effect at all times, o
 
 
 ### `Atom`
-- Describes an atom with a charge number `Z` and a `position`, a tuple of three coordinates.
+- Describes an atom with atomic number `Z` and a `position`, a tuple of three coordinates.
 
 
 ## Constants
@@ -184,10 +184,14 @@ Returns two tuples, the first being the cameras position, the second being the d
 
 ### `setElementProperties(Z, color, roughness, metallicity)`
 Although VoluMol comes with a default color scheme for the elements, you can use this function to change these materials.
-- `Z` Is the charge number of the element.
+- `Z` Is the atomic number of the element.
 - `color` Is a tuple describing the element's color.
 - `roughness` Describes how rough the material is. Lower values mean shinier materials. Range is between `0` and `1`.
 - `metallicity` Controls how metallic the material is. Range is between `0` and `1`.
+
+### `getElementProperties(Z)`
+Returns a tuple containing the color, roughness and metallic of an elements material.
+- `Z` Is the atomic number of the element.
 
 
 ### `updateSettings(settings)`
