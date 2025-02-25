@@ -59,7 +59,7 @@ Controls the functions of the program. Some settings take effect at all times, o
 |`cylinder_resolution`|`int`| MMG: Controls the quality of cylinders for displaying bonds. Normally, the default value doesn't cause performance problems but it could for very large molecules. |`32`|
 |`volumetric_iterations`|`int`| Controls the number of raycasting steps for volumetrics. This is the main variable that impacts visual quality and performance of volumetrics. |`100`|
 |`volumetric_light_iterations`|`int`| Controls the number of raycasting steps for shading with volumetrics. This also has a big impact on performance and visual quality. |`5`|
-|`taa_quality`|`int`| Antialiasing quality. This quite strongly affects performance and should really only be used for final renders. A value of `1` means no effective antialiasing, whereas `2` to `4` should give decent results. Higher values can result in banding. This effect also improves the quality of some other effects like ambient occlusion and outlines. |`1`|
+|`aa_quality`|`int`| Antialiasing quality. This quite strongly affects performance and should really only be used for final renders. A value of `1` means no effective antialiasing, whereas `2` to `4` should give decent results. Higher values can result in banding. This effect also improves the quality of some other effects like ambient occlusion, volumetrics and outlines. |`1`|
 |`cubemap_thread_count`|`int`| CG: Controls how many CPU threads are used to render cubemaps when use of the GPU is disabled. |`8`|
 |`ao_iterations`|`int`| Iterations used for ambient occlusion. This affects both performance and visual quality. |`16`|
 |`smooth_bonds`|`bool`| MMG: When set to `True`, bonds are drawn with smooth color gradients between atoms. |`False`|
