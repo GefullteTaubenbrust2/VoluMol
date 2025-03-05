@@ -297,7 +297,7 @@ namespace mol {
 			for (int x = min.x; x < max.x; ++x) {
 				for (int y = min.y; y < max.y; ++y) {
 					for (int z = min.z; z < max.z; ++z) {
-						glm::dvec3 p = map.origin + map.size * glm::dvec3(x, y, z) / glm::dvec3(dimensions);
+						glm::dvec3 p = map.origin + map.size * glm::dvec3(x + 0.5, y + 0.5, z + 0.5) / glm::dvec3(dimensions);
 						double phi = b.sample(p);
 
 						map.texture.data[4 * (x + map.texture.width * (y + map.texture.height * z))] += coeff * phi;
