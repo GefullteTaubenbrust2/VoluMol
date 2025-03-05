@@ -10,6 +10,6 @@ uniform mat3 transformations;
 uniform int layer_count;
 
 void main() {
-	gl_Position = vec4((transformations * vec3(aPos.xy, 1.0)).xy, aPos.z / float(layer_count), 1.0);
+	gl_Position = vec4((transformations * vec3(aPos.xy, 1.0)).xy, (aPos.z + 0.5) / float(layer_count), 1.0);
     layer = int(aPos.z);
 }
