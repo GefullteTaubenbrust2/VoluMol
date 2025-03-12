@@ -17,6 +17,10 @@ VoluMol uses Python for scripting. Note that `conda` tends to create a lot of pr
 ```python
 import <path>.volumol as volumol
 ```
+Or even better, add the folder containing the dynamic library to your python path. For linux, you might add the following to your `.bashrc` file:
+```bash
+export PYTHONPATH=$PYTHONPATH:Path/To/Volumol/
+```
 You can then call all functions of the program like:
 ```python
 volumol.createWindow()
