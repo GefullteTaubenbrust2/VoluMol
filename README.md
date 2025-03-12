@@ -35,7 +35,7 @@ Controls the functions of the program. Some settings take effect at all times, o
 |-|-|-|-|
 |`size_factor`|`float`| MMG: Controls the displayed size of atoms. This size is set to `size_factor` multiplied by the Van-der-Waals radius of the atom. |`0.2`|
 |`bond_thickness`|`float`| MMG: Controls displayed bond thickness. This should not be bigger than `size_factor`. |`0.2`|
-|`bond_length_tolerance`|`float`| MMG: Controls how bonds are assigned. Bonds are created based on the covalent radii of participating atoms. This tolerance controls how much further apart than the sum of their covalent radii can be and still be treated as bonded. A value of `0.5` would correspond to a 50% tolerance. |`0.3`|
+|`bond_length_tolerance`|`float`| Upon loading files: Controls how bonds are assigned. Bonds are created based on the covalent radii of participating atoms. This tolerance controls how much further apart than the sum of their covalent radii two atoms can be and still be treated as bonded. A value of `0.5` would correspond to a 50% tolerance. |`0.3`|
 |`fov`|`float`| Field of view of the camera in degress. If `orthographic` is set to `True`, this controls the width of the view in Angstroms instead. |`70.`|
 |`outline_radius`|`float`| Controls how thick cartoon-like outlines are drawn around solid objects. If set to `0`, outlines are disabled. |`2.`|
 |`ao_intensity`|`float`| Controls the intensity of ambient occlusion (which makes creases appear darker). A value of `0` disables AO, which improves performance. |`1.`|
@@ -125,6 +125,14 @@ Loads a XYZ file and disables previous isosurfaces/volumetrics.
 
 ### `getAtom(id)`
 Returns an atom corresponding to the provided `id`. Some file formats assign IDs to atoms which should be used here. Otherwise, atoms are labeled `0`, `1`, ... by the order in which they appear in the respective file.
+
+
+### `addBond(atom0, atom1)`
+Will draw a bond between atoms with ids `atom0` and `atom1`.
+
+
+### `removeBond(atom0, atom1)`
+Will not draw a bond between atoms with ids `atom0` and `atom1`, even if they are sufficiently close.
 
 
 ### `setTransform(atom0, atom1, atom2, pos0, dir1, dir2)`
