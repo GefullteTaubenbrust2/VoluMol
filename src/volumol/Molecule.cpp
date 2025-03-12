@@ -109,7 +109,7 @@ namespace mol {
 	Atom Molecule::getAtom(uint atom) const {
 		if (!index_map.size() && atom < atoms.size()) return atoms[atom];
 		for (int i = 0; i < index_map.size(); ++i) if (index_map[i] == atom) return atoms[i];
-		return Atom();
+		return Atom(invalid, glm::vec3(0., 0., 0.));
 	}
 
 	// S. S. Batsanov, Inorganic Materials 37, 2001, 871-885.
