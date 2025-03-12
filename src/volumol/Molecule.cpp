@@ -46,6 +46,7 @@ namespace mol {
 			glm::vec3 color = properties.materials[atoms[i].Z].color;
 			glm::vec2 uv = glm::vec2(properties.materials[atoms[i].Z].roughness, properties.materials[atoms[i].Z].metallicity);
 			float size = vdw_radii_A[atoms[i].Z] * properties.size_factor;
+			if (!atoms[i].Z) size = properties.size_factor * 0.5f;
 			glm::mat4 transform = glm::mat4{
 				glm::vec4(size, 0.0, 0.0, 0.0),
 				glm::vec4(0.0, size, 0.0, 0.0),

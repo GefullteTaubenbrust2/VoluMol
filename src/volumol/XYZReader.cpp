@@ -29,7 +29,7 @@ namespace mol {
 			if (!isText(line[offset])) break;
 
 			std::string element_name = readText(line, offset);
-			uint element = invalid;
+			uint element = ghost_atom;
 
 			for (int i = 0; i < 119; ++i) {
 				if (element_names[i] == element_name) {
