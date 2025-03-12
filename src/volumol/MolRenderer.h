@@ -9,6 +9,10 @@ namespace mol::Renderer {
 
 	void setMolecule(const Molecule& molecule);
 
+	void addBond(uint a, uint b);
+
+	void removeBond(uint a, uint b);
+
 	void setVolumetric();
 
 	void setIsosurface();

@@ -18,12 +18,17 @@ namespace mol {
 	struct Molecule {
 		std::vector<Atom> atoms;
 		std::vector<uint> index_map;
+		std::vector<glm::ivec2> bonds;
 		
 		Molecule() = default;
 
+		void setBonds(const RenderProperties& properties);
+
 		void generateMesh(Mesh& mesh, const RenderProperties& properties) const;
 
-		Atom getAtom(uint atom);
+		uint getIndex(uint id) const;
+
+		Atom getAtom(uint atom) const;
 	};
 
 	struct ElementMaterial {

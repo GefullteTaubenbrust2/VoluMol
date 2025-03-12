@@ -78,6 +78,14 @@ DLLEXPORT void pyGetAtom(int id, int& Z, float& x, float& y, float& z) {
 	z = atom.position.z;
 }
 
+DLLEXPORT void pyAddBond(int atom0, int atom1) {
+	mol::Renderer::addBond(atom0, atom1);
+}
+
+DLLEXPORT void pyRemoveBond(int atom0, int atom1) {
+	mol::Renderer::removeBond(atom0, atom1);
+}
+
 DLLEXPORT void pySetTransform(int id0, int id1, int id2, float* vectors) {
 	glm::mat4 transform = mol::Renderer::getTransform(id0, id1, id2, vec3FromFloats(vectors, 0), vec3FromFloats(vectors, 1), vec3FromFloats(vectors, 2));
 	mol::Renderer::setTransform(transform);

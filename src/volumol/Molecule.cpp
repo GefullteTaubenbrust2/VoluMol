@@ -19,6 +19,20 @@ namespace mol {
 		}
 	}
 
+	void Molecule::setBonds(const RenderProperties& properties) {
+		bonds.clear();
+		for (int i = 0; i < atoms.size(); ++i) {
+			glm::vec3 pos = atoms[i].position;
+			for (int j = i + 1; j < atoms.size(); ++j) {
+				glm::vec3 r = atoms[j].position - pos;
+				float distance = glm::length(r);
+				if (distance < (1.f + properties.bond_length_tolerance) * (covalent_radii_A[atoms[i].Z] + covalent_radii_A[atoms[j].Z])) {
+					bonds.push_back(glm::ivec2(i, j));
+				}
+			}
+		}
+	}
+
 	void Molecule::generateMesh(Mesh& mesh, const RenderProperties& properties) const {
 		mesh.vertices.clear();
 		mesh.indices.clear();
@@ -46,40 +60,52 @@ namespace mol {
 			}
 			
 			mesh.mergeMesh(sphere, transform);
+		}
 
-			for (int j = i + 1; j < atoms.size(); ++j) {
-				glm::vec3 r = atoms[j].position - pos;
-				float distance = glm::length(r);
-				if (distance < (1.f + properties.bond_length_tolerance) * (covalent_radii_A[atoms[i].Z] + covalent_radii_A[atoms[j].Z])) {
-					glm::vec3 nr = glm::normalize(r);
-					glm::vec3 s = glm::normalize(glm::cross(nr, nr.z * nr.z > 0.5 ? glm::vec3(1.0, 0.0, 0.0) : glm::vec3(0.0, 0.0, 1.0)));
-					glm::vec3 t = glm::cross(nr, s);
+		for (const glm::ivec2& bond : bonds) {
+			const Atom& a0 = atoms[bond.x];
+			const Atom& a1 = atoms[bond.y];
 
-					glm::mat4 transform = glm::mat4{
-						glm::vec4(s, 0.0),
-						glm::vec4(t, 0.0),
-						glm::vec4(r, 0.0),
-						glm::vec4(pos, 1.0)
-					};
+			glm::vec3 pos0 = a0.position;
+			glm::vec3 color0 = properties.materials[a0.Z].color;
+			glm::vec2 uv0 = glm::vec2(properties.materials[a0.Z].roughness, properties.materials[a0.Z].metallicity);
 
-					Mesh cylinder = cylinder_mesh;
-					glm::vec3 color2 = properties.materials[atoms[j].Z].color;
-					glm::vec2 uv2 = glm::vec2(properties.materials[atoms[j].Z].roughness, properties.materials[atoms[j].Z].metallicity);
-					for (Vertex3D& v : cylinder.vertices) {
-						v.tex_coord = v.color.r * uv + v.color.g * uv2;
-						v.color = v.color.r * color + v.color.g * color2;
-					}
+			glm::vec3 pos1 = a1.position;
+			glm::vec3 color1 = properties.materials[a1.Z].color;
+			glm::vec2 uv1 = glm::vec2(properties.materials[a1.Z].roughness, properties.materials[a1.Z].metallicity);
 
-					mesh.mergeMesh(cylinder, transform);
-				}
+			glm::vec3 r = pos1 - pos0;
+			float distance = glm::length(r);
+			glm::vec3 nr = glm::normalize(r);
+			glm::vec3 s = glm::normalize(glm::cross(nr, nr.z * nr.z > 0.5 ? glm::vec3(1.0, 0.0, 0.0) : glm::vec3(0.0, 0.0, 1.0)));
+			glm::vec3 t = glm::cross(nr, s);
+
+			glm::mat4 transform = glm::mat4{
+				glm::vec4(s, 0.0),
+				glm::vec4(t, 0.0),
+				glm::vec4(r, 0.0),
+				glm::vec4(pos0, 1.0)
+			};
+
+			Mesh cylinder = cylinder_mesh;
+			for (Vertex3D& v : cylinder.vertices) {
+				v.tex_coord = v.color.r * uv0 + v.color.g * uv1;
+				v.color = v.color.r * color0 + v.color.g * color1;
 			}
+
+			mesh.mergeMesh(cylinder, transform);
 		}
 
 		mesh.generateNormals();
 		mesh.update();
 	}
 
-	Atom Molecule::getAtom(uint atom) {
+	uint Molecule::getIndex(uint id) const {
+		for (int i = 0; i < index_map.size(); ++i) if (index_map[i] == id) return i;
+		return id;
+	}
+
+	Atom Molecule::getAtom(uint atom) const {
 		if (!index_map.size() && atom < atoms.size()) return atoms[atom];
 		for (int i = 0; i < index_map.size(); ++i) if (index_map[i] == atom) return atoms[i];
 		return Atom();

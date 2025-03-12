@@ -30,6 +30,8 @@ namespace mol::Renderer {
 	glm::mat4 model_matrix = glm::mat4(1.0);
 	std::vector<glm::vec3> molecule_positions;
 
+	bool update_molecule = false;
+
 	bool use_volumetric = false;
 
 	std::vector<glm::vec2> taa_jitter_offsets = {glm::vec2(0.f)};
@@ -213,9 +215,7 @@ namespace mol::Renderer {
 		isosurface_mesh.indices.clear();
 		isosurface_mesh.update();
 
-		molecule_mesh.vertices.clear();
-		molecule_mesh.indices.clear();
-		molecule.generateMesh(molecule_mesh, settings);
+		molecule.setBonds(settings);
 		molecule_positions.clear();
 		molecule_positions.reserve(molecule.atoms.size());
 		for (Atom a : molecule.atoms) {
@@ -224,6 +224,30 @@ namespace mol::Renderer {
 		glm::vec3 sun_position = glm::mat3(model_matrix) * settings.sun_position;
 		csm.fitScene(molecule_positions, sun_position, 4.f);
 		use_volumetric = false;
+		update_molecule = true;
+	}
+
+	void addBond(uint a, uint b) {
+		a = molecule.getIndex(a);
+		b = molecule.getIndex(b);
+		for (int i = 0; i < molecule.bonds.size(); ++i) {
+			if ((molecule.bonds[i].x == a && molecule.bonds[i].y == b) || (molecule.bonds[i].x == b && molecule.bonds[i].y == a)) return;
+		}
+		molecule.bonds.push_back(glm::ivec2(a, b));
+		update_molecule = true;
+	}
+
+	void removeBond(uint a, uint b) {
+		a = molecule.getIndex(a);
+		b = molecule.getIndex(b);
+		for (int i = 0; i < molecule.bonds.size(); ++i) {
+			if ((molecule.bonds[i].x == a && molecule.bonds[i].y == b) || (molecule.bonds[i].x == b && molecule.bonds[i].y == a)) {
+				molecule.bonds.erase(molecule.bonds.begin() + i);
+				--i;
+				continue;
+			}
+		}
+		update_molecule = true;
 	}
 
 	void setVolumetric() {
@@ -291,6 +315,11 @@ namespace mol::Renderer {
 	}
 
 	void renderFrame(uint width, uint height) {
+		if (update_molecule) {
+			molecule.generateMesh(molecule_mesh, settings);
+			update_molecule = false;
+		}
+
 		if (settings.orthographic) view.setOrthographic(settings.fov * (float)width / (float)height, settings.fov, settings.z_near, settings.z_far);
 		else view.setPerspective(glm::radians(settings.fov), width, height, settings.z_near, settings.z_far);
 
