@@ -21,6 +21,8 @@ __library.pyLoadMoldenFile.argtypes = [ctypes.c_char_p]
 __library.pyLoadWFXFile.argtypes = [ctypes.c_char_p]
 __library.pyLoadXYZFile.argtypes = [ctypes.c_char_p]
 __library.pyGetAtom.argtypes = [ctypes.c_int, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_float)]
+__library.pyAddBond.argtypes = [ctypes.c_int, ctypes.c_int]
+__library.pyRemoveBond.argtypes = [ctypes.c_int, ctypes.c_int]
 __library.pySetTransform.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_float)]
 __library.pyMOCount.restype = ctypes.c_int
 __library.pyGetLUMO.restype = ctypes.c_int
@@ -197,6 +199,12 @@ def getElementProperties(Z):
     metallic = ctypes.c_float()
     __library.pyGetElementProperties(Z, color, ctypes.pointer(roughness), ctypes.pointer(metallic))
     return ((color[0], color[1], color[2]), roughness, metallic)
+
+def addBond(a,b):
+    __library.pyAddBond(a,b)
+
+def removeBond(a,b):
+    __library.pyRemoveBond(a,b)
 
 def updateSettings(settings):
     floats = (ctypes.c_float * 20)(
