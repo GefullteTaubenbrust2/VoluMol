@@ -18,7 +18,7 @@ namespace mol {
 
 		uint real_number_atoms = 0;
 
-		for (int l = 1; l < file.size(); ++l) {
+		for (int l = 2; l < file.size(); ++l) {
 			std::string line = file[l];
 			offset = 0;
 
