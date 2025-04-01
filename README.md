@@ -12,10 +12,10 @@ A simple program written in C++ and GLSL using OpenGL for rendering molecules an
 ### Windows and MSVC:
 - Create a subdirectory in the main folder to build in. The name doesn't matter, but probably call it something like `build`.
 - Open the CMake UI and use `Browse Source` and `Browse Build` to link to the main and build folders respectively.
-- Click `Generate` and select Visual Studio (tested with Visual Studio 16 2019) and click `Finish`.
+- Click `Generate`, select Visual Studio (tested with Visual Studio 16 2019) and click `Finish`.
 - Open the `.sln` file in the build directory.
 - Switch to `Release` mode and compile.
-- If all this worked without errors, copy the `.dll` file from the `Release` folder back to the main folder.
+- If all this worked without errors, copy the `.dll` file from the `Release` folder back to the main directory.
   
 If you have successfully compiled the `.so`/`.dll` file, you can write a test script to open and close the window. If nothing bad happens, your installation is probably working at this point.
 
