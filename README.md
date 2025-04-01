@@ -56,8 +56,8 @@ Controls the functions of the program. Some settings take effect at all times, o
 |`volumetric_light_distance`|`float`| How far rays are cast during volumetrics rendering for shading. Higher values improve visual quality, but also require higher sample counts which adversely affects performance. |`3.`|
 |`volumetric_cutoff`|`float`| Affects at which density values the volumetrics shader will skip samples. Low values decrease performance, high values affect visual quality. |`0.00001`|
 |`isovalue`|`float`| IG: The isovalue for rendering isosurfaces, assuming atomic units. |`0.02`
-|`isosurface roughness`|`float`| IG: The roughness of the isosurface material, between `0` and `1`. Lower values mean shinier isosurfaces. |`0.5`|
-|`isosurface metallicity`|`float`| IG: The amount of metallic shading of the isosurface material. Normally this should be set to `0` or `1`. |`0.`|
+|`isosurface_roughness`|`float`| IG: The roughness of the isosurface material, between `0` and `1`. Lower values mean shinier isosurfaces. |`0.5`|
+|`isosurface_metallicity`|`float`| IG: The amount of metallic shading of the isosurface material. Normally this should be set to `0` or `1`. |`0.`|
 |`volumetric_density`|`float`| Controls the density of volumetric MOs. |`50.`
 |`brightness`|`float`| Controls how much the image is brightened during post processing. Beware that values beyond `1.` can cause colors to exceed the screen's range and clip. |`1.`|
 |`z_near`|`float`| Camera near clipping plane. Small values mean you can get closer to objects before they clip, but also decrease depth resolution. |`0.3`|
