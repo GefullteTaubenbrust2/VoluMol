@@ -35,7 +35,6 @@ target_sources(
 	src/graphics/Window.cpp
 	
 	src/logic/Allocator.cpp
-	src/logic/Assert.cpp
 	src/logic/Clipboard.cpp
 	src/logic/ConsoleUtils.cpp
 	src/logic/Input.cpp
