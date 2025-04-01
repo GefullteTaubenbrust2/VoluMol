@@ -167,8 +167,8 @@ namespace fgr {
 
 		flo::Array<char> data(4 * width * height);
 
-		for (int x = 0; x < texture.width / width; ++x) {
-			for (int y = 0; y < texture.height / height; ++y) {
+		for (int y = 0; y < texture.height / height; ++y) {
+			for (int x = 0; x < texture.width / width; ++x) {
 				const int index = x + y * texture.width / width;
 				glBindTexture(GL_TEXTURE_2D, output[index]);
 

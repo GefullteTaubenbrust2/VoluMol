@@ -294,9 +294,9 @@ namespace mol {
 			glm::ivec3 min = glm::clamp(glm::ivec3(((b.origin - radius - map.origin) / map.size) * (glm::dvec3)dimensions), glm::ivec3(0, 0, z_min), glm::ivec3(dimensions.x, dimensions.y, z_max));
 			glm::ivec3 max = glm::clamp(glm::ivec3(((b.origin + radius - map.origin) / map.size) * (glm::dvec3)dimensions), glm::ivec3(0, 0, z_min), glm::ivec3(dimensions.x, dimensions.y, z_max));
 
-			for (int x = min.x; x < max.x; ++x) {
+			for (int z = min.z; z < max.z; ++z) {
 				for (int y = min.y; y < max.y; ++y) {
-					for (int z = min.z; z < max.z; ++z) {
+					for (int x = min.x; x < max.x; ++x) {
 						glm::dvec3 p = map.origin + map.size * glm::dvec3(x + 0.5, y + 0.5, z + 0.5) / glm::dvec3(dimensions);
 						double phi = b.sample(p);
 
@@ -520,9 +520,9 @@ namespace mol {
 			map.texture.loadFromID(map.texture.id);
 		}
 		else {
-			for (int x = 0; x < dimensions.x; ++x) {
+			for (int z = 0; z < dimensions.z; ++z) {
 				for (int y = 0; y < dimensions.y; ++y) {
-					for (int z = 0; z < dimensions.z; ++z) {
+					for (int x = 0; x < dimensions.x; ++x) {
 						map.texture.data[4 * (x + dimensions.x * (y + dimensions.y * z))] = 0.0;
 						map.texture.data[4 * (x + dimensions.x * (y + dimensions.y * z)) + 1] = 0.0;
 						map.texture.data[4 * (x + dimensions.x * (y + dimensions.y * z)) + 2] = 0.0;

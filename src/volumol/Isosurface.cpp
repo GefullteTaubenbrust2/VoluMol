@@ -16,9 +16,9 @@ namespace mol {
 		flo::Array<int> index_buffer(3 * width * height * depth);
 		for (int i = 0; i < 3 * width * height * depth; ++i) index_buffer[i] = -1;
 
-		for (uint x = 0; x < width - 1; ++x) {
+		for (uint z = 0; z < depth - 1; ++z) {
 			for (uint y = 0; y < height - 1; ++y) {
-				for (uint z = 0; z < depth - 1; ++z) {
+				for (uint x = 0; x < width - 1; ++x) {
 					float values[8] = {
 						texture.data[4 * (x +     (y +     (z    ) * height) * width)], // 000
 						texture.data[4 * (x + 1 + (y +     (z    ) * height) * width)], // 100

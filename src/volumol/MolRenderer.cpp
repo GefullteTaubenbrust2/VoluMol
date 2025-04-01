@@ -221,7 +221,8 @@ namespace mol::Renderer {
 		for (Atom a : molecule.atoms) {
 			molecule_positions.push_back(a.position);
 		}
-		glm::vec3 sun_position = glm::mat3(model_matrix) * settings.sun_position;
+		model_matrix = glm::mat4(1.0);
+		glm::vec3 sun_position = settings.sun_position;
 		csm.fitScene(molecule_positions, sun_position, 4.f);
 		use_volumetric = false;
 		update_molecule = true;
