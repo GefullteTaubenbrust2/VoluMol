@@ -6,10 +6,18 @@ A simple program written in C++ and GLSL using OpenGL for rendering molecules an
 # Installation
 
 - Download the files from this repo.
-- Download the GLFW source code (ideally the latest version, but currently 3.4 is used), rename the folder to glfw and move it to your VoluMol directory.
-- Install CMake if you haven't already.
-- Compile the program by typing `cmake .` and `make` in the console. GLFW likes to cause problems with Wayland, but it should be fine if your drivers, OS and GLFW installation are up to date.
-- If you have successfully compiled the `.so`/`.dll` file, you can write a test script to open and close the window. If nothing bad happens, your installation is probably working at this point.
+- Install CMake and a suitable compiler (see below) if you haven't already.
+### Linux and Make:
+- Open the terminal in the main folder and type `cmake .` and `make` in the console. CMake will automatically try to download GLFW from GitHub and the program will be compiled. At this point, your installation should be finished.
+### Windows and MSVC:
+- Create a subdirectory in the main folder to build in. The name doesn't matter, but probably call it something like `build`.
+- Open the CMake UI and use `Browse Source` and `Browse Build` to link to the main and build folders respectively.
+- Click `Generate` and select Visual Studio (tested with Visual Studio 16 2019) and click `Finish`.
+- Open the `.sln` file in the build directory.
+- Switch to `Release` mode and compile.
+- If all this worked without errors, copy the `.dll` file from the `Release` folder back to the main folder.
+  
+If you have successfully compiled the `.so`/`.dll` file, you can write a test script to open and close the window. If nothing bad happens, your installation is probably working at this point.
 
 # Usage
 
