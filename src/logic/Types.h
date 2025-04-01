@@ -3,33 +3,18 @@
 #include <vector>
 #include <cstddef>
 
-#if defined _WIN64 || defined __x86_64 || defined ppc64__
-typedef long long i64;
-typedef int i32;
-typedef short i16;
-typedef char i8;
-typedef unsigned char u8;
-typedef unsigned short u16;
-typedef unsigned int u32;
-typedef unsigned long long u64;
-typedef unsigned long long size;
+typedef std::int64_t i64;
+typedef std::int32_t i32;
+typedef std::int16_t i16;
+typedef std::int8_t i8;
+typedef std::uint8_t u8;
+typedef std::uint16_t u16;
+typedef std::uint32_t u32;
+typedef std::uint64_t u64;
+typedef std::size_t size;
 typedef unsigned char uchar;
 typedef unsigned short ushort;
 typedef unsigned int uint;
-#elif defined _WIN32
-typedef long long i64;
-typedef int i32;
-typedef short i16;
-typedef char i8;
-typedef unsigned char u8;
-typedef unsigned short u16;
-typedef unsigned int u32;
-typedef unsigned long long u64;
-typedef unsigned int size;
-typedef unsigned char uchar;
-typedef unsigned short ushort;
-typedef unsigned int uint;
-#endif
 
 typedef size_t typehash;
 

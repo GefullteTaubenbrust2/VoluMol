@@ -1,18 +1,29 @@
 cmake_minimum_required(VERSION 3.9)
 project(library VERSION 1.0.0 DESCRIPTION "VoluMol")
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_BUILD_PARALLEL_LEVEL 8)
+
+if (MSVC)
+    add_compile_options(/MP)
+endif()
+
 include_directories(include)
 
 find_package(OpenGL REQUIRED)
 
-set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-
-add_subdirectory(glfw)
-
-#add_executable(library test.cpp src/graphics/glad.c)
-#add_library(library SHARED test.cpp src/graphics/glad.c)
+include(FetchContent)
+FetchContent_Declare(
+  glfw
+  GIT_REPOSITORY https://github.com/glfw/glfw
+)
+FetchContent_MakeAvailable(glfw)
+FetchContent_GetProperties(glfw)
+if (NOT glfw_POPULATED)
+  FetchContent_Populate(glfw)
+  add_subdirectory(${glfw_SOURCE_DIR} ${glfw_BINARY_DIR})
+endif()
 
 add_library(library SHARED src/volumol/Python.cpp)
 target_sources(
@@ -35,7 +46,6 @@ target_sources(
 	src/graphics/Window.cpp
 	
 	src/logic/Allocator.cpp
-	src/logic/Assert.cpp
 	src/logic/Clipboard.cpp
 	src/logic/ConsoleUtils.cpp
 	src/logic/Input.cpp
