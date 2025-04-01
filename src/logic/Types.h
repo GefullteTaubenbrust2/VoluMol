@@ -1,7 +1,7 @@
 #pragma once
 #include <typeindex>
 #include <vector>
-#include <cstddef>
+#include <cinttypes>
 
 typedef std::int64_t i64;
 typedef std::int32_t i32;
@@ -16,7 +16,7 @@ typedef unsigned char uchar;
 typedef unsigned short ushort;
 typedef unsigned int uint;
 
-typedef size_t typehash;
+typedef std::size_t typehash;
 
 ///<summary>
 /// Generate a unique hash for a type.
