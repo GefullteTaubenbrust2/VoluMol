@@ -31,7 +31,9 @@ export PYTHONPATH=$PYTHONPATH:Path/To/Volumol/
 ```
 You can then call all functions of the program like:
 ```python
+import volumol
 volumol.createWindow()
+volumol.dispose()
 ```
 3D vectors and colors are represented with tuples of three. A comprehensive list of all features follows. Note that even though the interface technically exposes additional functions and variables, you should not touch these.
 
