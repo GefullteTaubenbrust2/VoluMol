@@ -46,7 +46,7 @@ namespace mol {
 			glm::vec3 color = properties.materials[atoms[i].Z].color;
 			glm::vec2 uv = glm::vec2(properties.materials[atoms[i].Z].roughness, properties.materials[atoms[i].Z].metallicity);
 			float size = vdw_radii_A[atoms[i].Z] * properties.size_factor;
-			if (!atoms[i].Z) size = properties.size_factor * 0.5f;
+			if (!atoms[i].Z) size = properties.bond_thickness;
 			glm::mat4 transform = glm::mat4{
 				glm::vec4(size, 0.0, 0.0, 0.0),
 				glm::vec4(0.0, size, 0.0, 0.0),
@@ -64,6 +64,7 @@ namespace mol {
 		}
 
 		for (const glm::ivec2& bond : bonds) {
+			if (bond.x < 0 || bond.x >= atoms.size() || bond.y < 0 || bond.y >= atoms.size()) continue;
 			const Atom& a0 = atoms[bond.x];
 			const Atom& a1 = atoms[bond.y];
 
