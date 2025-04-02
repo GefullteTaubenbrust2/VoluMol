@@ -17,6 +17,7 @@ A simple program written in C++ and GLSL using OpenGL for rendering molecules an
 - Switch to `Release` mode and compile.
 - If all this worked without errors, copy the `.dll` file from the `Release` folder back to the main directory.
   
+Other compilers should also work.
 If you have successfully compiled the `.so`/`.dll` file, you can write a test script to open and close the window. If nothing bad happens, your installation is probably working at this point.
 
 # Usage
