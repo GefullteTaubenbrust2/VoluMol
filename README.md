@@ -8,17 +8,21 @@ A simple program written in C++ and GLSL using OpenGL for rendering molecules an
 - Download the files from this repo.
 - Install CMake and a suitable compiler (see below) if you haven't already.
 ### Linux and Make:
-- Open the terminal in the main folder and type `cmake .` and `make` in the console. CMake will automatically try to download GLFW from GitHub and the program will be compiled. At this point, your installation should be finished.
+- Open the terminal in the main folder and type `cmake .` and `make` in the console. Optionally add the flag `-DCOMPUTE_SHADERS=On` to your `cmake` prompt (requires Opengl 4.3+). CMake will automatically try to download GLFW from GitHub and the program will be compiled. At this point, your installation should be finished.
 ### Windows and MSVC:
 - Create a subdirectory in the main folder to build in. The name doesn't matter, but probably call it something like `build`.
 - Open the CMake UI and use `Browse Source` and `Browse Build` to link to the main and build folders respectively.
-- Click `Generate`, select Visual Studio (tested with Visual Studio 16 2019) and click `Finish`.
-- Open the `.sln` file in the build directory.
+- Click `Configure`, select Visual Studio (tested with Visual Studio 16 2019) and click `Finish`.
+- Optionally check `COMPUTE_SHADERS` (requires Opengl 4.3+).
+- Click `Generate` and open the `.sln` file in the build directory.
 - Switch to `Release` mode and compile.
 - If all this worked without errors, copy the `.dll` file from the `Release` folder back to the main directory.
-  
-Other compilers should also work.
-If you have successfully compiled the `.so`/`.dll` file, you can write a test script to open and close the window. If nothing bad happens, your installation is probably working at this point.
+### Other compilers:
+... should also work. I haven't used/tested them though.\
+\
+If you have successfully compiled the `.so`/`.dll` file, you can write a test script to open and close the window. If nothing bad happens, your installation is probably working at this point.\
+\
+Compute shaders are a more modern alternative to the previously used mode of generating cubemaps, although it will likely make very little difference in terms of computation times. It is possible, however, that they will be less prone to bugs in very large molecules. To enable them, enable the `COMPUTE_SHADERS` option as outlined above.
 
 # Usage
 
@@ -75,7 +79,7 @@ Controls the functions of the program. Some settings take effect at all times, o
 |`volumetric_iterations`|`int`| Controls the number of raycasting steps for volumetrics. This is the main variable that impacts visual quality and performance of volumetrics. |`100`|
 |`volumetric_light_iterations`|`int`| Controls the number of raycasting steps for shading with volumetrics. This also has a big impact on performance and visual quality. |`5`|
 |`aa_quality`|`int`| Antialiasing quality. This quite strongly affects performance and should really only be used for final renders. A value of `1` means no effective antialiasing, whereas `2` to `4` should give decent results. Higher values can result in banding. This effect also improves the quality of some other effects like ambient occlusion, volumetrics and outlines. |`1`|
-|`cubemap_thread_count`|`int`| CG: Controls how many CPU threads are used to render cubemaps when use of the GPU is disabled. |`8`|
+|`cubemap_slice_count`|`int`| CG: If use of the GPU is enabled, this splits the cubemap into slices. This might be required for large molecules on some machines. If the GPU is disabled, controls how many CPU threads are used to render cubemaps. In that case, it is strongly recommended to increase this as much as your CPU allows (however many cores you have). |`1`|
 |`ao_iterations`|`int`| Iterations used for ambient occlusion. This affects both performance and visual quality. |`16`|
 |`smooth_bonds`|`bool`| MMG: When set to `True`, bonds are drawn with smooth color gradients between atoms. |`False`|
 |`premultiply_color`|`bool`| Should color be premultiplied before blending onto the background? This should be set to `True` for white backgrounds due to clipping and `False` for black backgrounds. Only effective if `emissive_volume = False`. |`True`|
