@@ -5,6 +5,7 @@
 #include "Orbital.h"
 #include "MolRenderer.h"
 #include "XYZReader.h"
+#include "Settings.h"
 #include "../logic/TextReading.h"
 #include "../graphics/Window.h"
 
@@ -23,12 +24,8 @@
 
 extern std::string executable_path;
 
-namespace mol {
-	extern mol::RenderProperties settings;
-
-	namespace Renderer {
+namespace mol::Renderer {
 		extern glm::vec3 camera_position, camera_direction;
-	}
 }
 
 glm::vec3 vec3FromFloats(float* floats, uint offset) {
@@ -199,8 +196,8 @@ DLLEXPORT void pyUpdateSettings(float* floats, float* vectors, int* ints, bool* 
 	settings.cylinder_resolution			= ints[1];
 	settings.volumetric_iterations			= ints[2];
 	settings.volumetric_light_iterations	= ints[3];
-	settings.taa_quality					= ints[4];
-	settings.cubemap_thread_count			= ints[5];
+	settings.taa_quality					= glm::max(ints[4], 1);
+	settings.cubemap_slice_count			= glm::max(ints[5], 1);
 	settings.ao_iterations					= ints[6];
 
 	settings.smooth_bonds					= bools[0];

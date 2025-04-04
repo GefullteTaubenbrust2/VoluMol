@@ -1,0 +1,35 @@
+#version 430
+
+layout(local_size_x = 4, local_size_y = 4, local_size_z = 4) in;
+layout(rgba16f, binding = 0) uniform image3D img_output;
+
+#define PRIMITIVES 16
+
+uniform vec3 cubemap_origin;
+uniform vec3 cubemap_size;
+
+uniform vec4[PRIMITIVES] exponents;
+uniform float[PRIMITIVES] alpha;
+uniform float[PRIMITIVES] coeff;
+uniform vec3[PRIMITIVES] origin;
+
+float ipow(float f, int p) {
+	float r = 1.0;
+	for (int i = 0; i < p; ++i) r *= f;
+	return r;
+}
+
+void main() {
+	ivec3 pixel_coords = ivec3(gl_GlobalInvocationID.xyz);
+
+	vec3 pos = cubemap_origin + cubemap_size * (vec3(pixel_coords) + 0.5) / vec3(imageSize(img_output));
+	float psi = 0.0;
+	for (int i = 0; i < PRIMITIVES; ++i) {
+		vec3 r = pos - origin[i];
+		float R = length(r);
+		psi += coeff[i] * ipow(r.x, int(exponents[i].x)) * ipow(r.y, int(exponents[i].y)) * ipow(r.z, int(exponents[i].z)) * ipow(R, int(exponents[i].w)) * exp(-alpha[i] * R);
+	}
+
+	float previous = imageLoad(img_output, pixel_coords).r;
+	imageStore(img_output, pixel_coords, vec4(psi + previous, 0.0, 0.0, 0.0));
+}

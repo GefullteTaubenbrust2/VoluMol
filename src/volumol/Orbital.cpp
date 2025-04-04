@@ -3,7 +3,9 @@
 #include "../logic/MathUtil.h"
 #include "../graphics/FrameBuffer.h"
 #include "../graphics/Renderstate.h"
+#include "../graphics/ComputeShader.h"
 #include "Molecule.h"
+#include "Settings.h"
 
 #include <thread>
 
@@ -104,7 +106,6 @@ namespace mol {
 		0.6258357354,
 	};
 
-	extern RenderProperties settings;
 	extern CubeMap cubemap;
 
 	bool resize_cubemap = true;
@@ -113,6 +114,7 @@ namespace mol {
 	std::vector<MolecularOrbital> mos;
 
 	fgr::Shader gto_shader, sto_shader, density_shader;
+	fgr::ComputeShader gto_compute, sto_compute, density_compute;
 
 	double pow(double x, int e) {
 		double r = 1.0;
@@ -145,7 +147,8 @@ namespace mol {
 		return glm::exp(-alpha * r) * pow(r, e_r) * pow(pos.x, e_x) * pow(pos.y, e_y) * pow(pos.z, e_z);
 	}
 
-	/*STO::STO(double e_r, int n, int l, int m, double c) :
+#if 0
+	STO::STO(double e_r, int n, int l, int m, double c) :
 		e_r(e_r), coeff(c), n(n) {
 		for (int i = 0; i < 6; ++i) {
 			e_Y[i] = Y_exponents[(l * l + l + m) * 6 + i];
@@ -173,7 +176,8 @@ namespace mol {
 			for (int j = 1; j <= 2 * l + 1 + M; ++j) R[M] /= (double)j;
 			for (int j = 1; j <= M            ; ++j) R[M] /= (double)j;
 		}
-	}*/
+	}
+#endif
 
 	std::vector<GTO> generateSphericalGTO(double exponent, int l, int m) {
 		if (l == 0) {
@@ -332,58 +336,19 @@ namespace mol {
 		if (resize_cubemap) map.resize(glm::ivec3((glm::vec3)map.size * settings.cubemap_density));
 	}
 
-	void MolecularOrbital::writeCubeMap(CubeMap& map, bool print_progress) {
-		if (!basis) return;
-		if (!basis->size()) return;
+	void generateSliceVertexArrays(std::vector<fgr::VertexArray>& vas, uint total_slices) {
+		vas.resize(settings.cubemap_slice_count);
+		for (int i = 0; i < vas.size(); ++i) {
+			fgr::VertexArray& va = vas[i];
 
-		fitCubeMap(map, *basis);
-
-		glm::ivec3 dimensions = glm::ivec3(map.texture.width, map.texture.height, map.texture.depth);
-
-		if (settings.cubemap_use_gpu) {
-			if (use_stos) {
-				if (!gto_shader.loaded) {
-					sto_shader = fgr::Shader("shaders/volumol/gto.vert", "shaders/volumol/gto.frag", "shaders/volumol/sto.geom", std::vector<std::string>{
-						"cubemap_origin",	// 0
-						"cubemap_size",		// 1
-						"layer_count",		// 2
-						"origin",			// 3
-						"exponents",		// 4
-						"alpha",			// 5
-						"coeff",			// 6
-					});
-					sto_shader.compile();
-				}
-
-				sto_shader.setVec3(0, map.origin);
-				sto_shader.setVec3(1, map.size);
-				sto_shader.setInt(2, dimensions.z);
-			}
-			else {
-				if (!gto_shader.loaded)  {
-					gto_shader = fgr::Shader("shaders/volumol/gto.vert", "shaders/volumol/gto.frag", "shaders/volumol/gto.geom", std::vector<std::string>{
-						"cubemap_origin",	// 0
-						"cubemap_size",		// 1
-						"layer_count",		// 2
-						"origin",			// 3
-						"exponents",		// 4
-						"alpha",			// 5
-						"coeff",			// 6
-					});
-					gto_shader.compile();
-				}
-
-				gto_shader.setVec3(0, map.origin);
-				gto_shader.setVec3(1, map.size);
-				gto_shader.setInt(2, dimensions.z);
-			}	
-
-			fgr::VertexArray va;
 			va.init();
 
-			va.vertices.resize(6 * dimensions.z);
-			for (int z = 0; z < dimensions.z; ++z) {
-				float zp = (float)z;
+			uint start_slice = i * total_slices / (settings.cubemap_slice_count);
+			uint end_slice = (i + 1) * total_slices / (settings.cubemap_slice_count);
+
+			va.vertices.resize(6 * (end_slice - start_slice));
+			for (int z = 0; z < end_slice - start_slice; ++z) {
+				float zp = (float)(z + start_slice);
 				va.vertices[z * 6    ] = fgr::Vertex(glm::vec3(-1.0, -1.0, zp), glm::vec2(), glm::vec4());
 				va.vertices[z * 6 + 1] = fgr::Vertex(glm::vec3( 1.0, -1.0, zp), glm::vec2(), glm::vec4());
 				va.vertices[z * 6 + 2] = fgr::Vertex(glm::vec3(-1.0,  1.0, zp), glm::vec2(), glm::vec4());
@@ -393,6 +358,147 @@ namespace mol {
 			}
 
 			va.update();
+		}
+	}
+
+	void drawSlicesToFBO(std::vector<fgr::VertexArray>& vas, fgr::RenderTarget& fbo, fgr::Shader& shader, fgr::ComputeShader& compute, CubeMap& cubemap) {
+#if USE_COMPUTE_SHADERS
+		compute.bindImage(0, cubemap.texture.id, true, true, true, GL_RGBA16F);
+		compute.dispatch();
+#else
+		fbo.bind();
+		for (auto va : vas)
+			va.draw(shader);
+		fbo.unbind();
+#endif
+	}
+
+	void setGTOUniforms(glm::vec3* origins, glm::vec3* exponents3, float* alpha, float* coeffs, uint primitive_count) {
+#if USE_COMPUTE_SHADERS
+		gto_compute.setVec3Array(2, origins, primitive_count);
+		gto_compute.setVec3Array(3, exponents3, primitive_count);
+		gto_compute.setFloatArray(4, alpha, primitive_count);
+		gto_compute.setFloatArray(5, coeffs, primitive_count);
+#else
+		gto_shader.setVec3Array(3, origins, primitive_count);
+		gto_shader.setVec3Array(4, exponents3, primitive_count);
+		gto_shader.setFloatArray(5, alpha, primitive_count);
+		gto_shader.setFloatArray(6, coeffs, primitive_count);
+#endif
+	}
+
+	void setSTOUniforms(glm::vec3* origins, glm::vec4* exponents4, float* alpha, float* coeffs, uint primitive_count) {
+#if USE_COMPUTE_SHADERS
+		sto_compute.setVec3Array(2, origins, primitive_count);
+		sto_compute.setVec4Array(3, exponents4, primitive_count);
+		sto_compute.setFloatArray(4, alpha, primitive_count);
+		sto_compute.setFloatArray(5, coeffs, primitive_count);
+#else
+		sto_shader.setVec3Array(3, origins, primitive_count);
+		sto_shader.setVec4Array(4, exponents4, primitive_count);
+		sto_shader.setFloatArray(5, alpha, primitive_count);
+		sto_shader.setFloatArray(6, coeffs, primitive_count);
+#endif
+	}
+
+	void loadShader(bool sto, CubeMap& cubemap) {
+#if USE_COMPUTE_SHADERS
+		if (sto) {
+			if (!sto_compute.loaded) {
+				sto_compute = fgr::ComputeShader("shaders/volumol/sto.comp", std::vector<std::string>{
+					"cubemap_origin",	// 0
+					"cubemap_size",		// 1
+					"origin",			// 2
+					"exponents",		// 3
+					"alpha",			// 4
+					"coeff",			// 5
+				});
+				sto_shader.compile();
+			}
+
+			sto_compute.setVec3(0, cubemap.origin);
+			sto_compute.setVec3(1, cubemap.size);
+			sto_compute.work_group_count = glm::uvec3((glm::ivec3(cubemap.texture.width, cubemap.texture.height, cubemap.texture.depth) + 3) / 4);
+		}
+		else {
+			if (!gto_compute.loaded) {
+				gto_compute = fgr::ComputeShader("shaders/volumol/gto.comp", std::vector<std::string>{
+					"cubemap_origin",	// 0
+					"cubemap_size",		// 1
+					"origin",			// 2
+					"exponents",		// 3
+					"alpha",			// 4
+					"coeff",			// 5
+				});
+				gto_compute.compile();
+			}
+
+			gto_compute.setVec3(0, cubemap.origin);
+			gto_compute.setVec3(1, cubemap.size);
+			gto_compute.work_group_count = glm::uvec3((glm::ivec3(cubemap.texture.width, cubemap.texture.height, cubemap.texture.depth) + 3) / 4);
+		}
+#else
+		if (sto) {
+			if (!sto_shader.loaded) {
+				sto_shader = fgr::Shader("shaders/volumol/gto.vert", "shaders/volumol/sto.frag", "shaders/volumol/gto.geom", std::vector<std::string>{
+					"cubemap_origin",	// 0
+					"cubemap_size",		// 1
+					"layer_count",		// 2
+					"origin",			// 3
+					"exponents",		// 4
+					"alpha",			// 5
+					"coeff",			// 6
+				});
+				sto_shader.compile();
+			}
+
+			sto_shader.setVec3(0, cubemap.origin);
+			sto_shader.setVec3(1, cubemap.size);
+			sto_shader.setInt(2, cubemap.texture.depth);
+		}
+		else {
+			if (!gto_shader.loaded) {
+				gto_shader = fgr::Shader("shaders/volumol/gto.vert", "shaders/volumol/gto.frag", "shaders/volumol/gto.geom", std::vector<std::string>{
+					"cubemap_origin",	// 0
+					"cubemap_size",		// 1
+					"layer_count",		// 2
+					"origin",			// 3
+					"exponents",		// 4
+					"alpha",			// 5
+					"coeff",			// 6
+				});
+				gto_shader.compile();
+			}
+
+			gto_shader.setVec3(0, cubemap.origin);
+			gto_shader.setVec3(1, cubemap.size);
+			gto_shader.setInt(2, cubemap.texture.depth);
+		}
+#endif
+	}
+
+	void MolecularOrbital::writeCubeMap(CubeMap& map, bool print_progress) {
+		if (!basis) return;
+		if (!basis->size()) return;
+
+		fitCubeMap(map, *basis);
+
+		glm::ivec3 dimensions = glm::ivec3(map.texture.width, map.texture.height, map.texture.depth);
+
+		if (settings.cubemap_use_gpu) {
+
+			loadShader(use_stos, map);
+
+			if (print_progress) {
+#if USE_COMPUTE_SHADERS
+				std::cout << "Using compute shaders for rendering\n";
+#else
+				std::cout << "Using geometry shaders for rendering\n";
+#endif
+			}
+
+			std::vector<fgr::VertexArray> vas;
+			generateSliceVertexArrays(vas, dimensions.z);
 
 			if (!map.texture.id) {
 				map.texture.createBuffer(GL_CLAMP_TO_BORDER, GL_LINEAR);
@@ -428,16 +534,12 @@ namespace mol {
 
 						if (index == primitive_count) {
 							index = 0;
-							sto_shader.setVec3Array(3, origins, primitive_count);
-							sto_shader.setVec4Array(4, exponents4, primitive_count);
-							sto_shader.setFloatArray(5, alpha, primitive_count);
-							sto_shader.setFloatArray(6, coeffs, primitive_count);
+
+							setSTOUniforms(origins, exponents4, alpha, coeffs, primitive_count);
 
 							if (print_progress) std::cout << "Cubemap: AO " << (i + 1) << "/" << ao_count << '\n';
 
-							fbo.bind();
-							va.draw(gto_shader);
-							fbo.unbind();
+							drawSlicesToFBO(vas, fbo, sto_shader, sto_compute, map);
 
 							fgr::setBlending(fgr::Blending::additive);
 						}
@@ -452,16 +554,9 @@ namespace mol {
 						coeffs[i] = 0.f;
 					}
 
-					sto_shader.setVec3Array(3, origins, primitive_count);
-					sto_shader.setVec4Array(4, exponents4, primitive_count);
-					sto_shader.setFloatArray(5, alpha, primitive_count);
-					sto_shader.setFloatArray(6, coeffs, primitive_count);
+					setSTOUniforms(origins, exponents4, alpha, coeffs, primitive_count);
 
-					if (print_progress) std::cout << "Cubemap: AO " << ao_count << "/" << ao_count << '\n';
-
-					fbo.bind();
-					va.draw(gto_shader);
-					fbo.unbind();
+					drawSlicesToFBO(vas, fbo, sto_shader, sto_compute, map);
 				}
 			}
 			else {
@@ -478,16 +573,12 @@ namespace mol {
 
 						if (index == primitive_count) {
 							index = 0;
-							gto_shader.setVec3Array(3, origins, primitive_count);
-							gto_shader.setVec3Array(4, exponents3, primitive_count);
-							gto_shader.setFloatArray(5, alpha, primitive_count);
-							gto_shader.setFloatArray(6, coeffs, primitive_count);
+
+							setGTOUniforms(origins, exponents3, alpha, coeffs, primitive_count);
 
 							if (print_progress) std::cout << "Cubemap: AO " << (i + 1) << "/" << ao_count << '\n';
 
-							fbo.bind();
-							va.draw(gto_shader);
-							fbo.unbind();
+							drawSlicesToFBO(vas, fbo, gto_shader, gto_compute, map);
 
 							fgr::setBlending(fgr::Blending::additive);
 						}
@@ -502,16 +593,9 @@ namespace mol {
 						coeffs[i] = 0.f;
 					}
 
-					gto_shader.setVec3Array(3, origins, primitive_count);
-					gto_shader.setVec3Array(4, exponents3, primitive_count);
-					gto_shader.setFloatArray(5, alpha, primitive_count);
-					gto_shader.setFloatArray(6, coeffs, primitive_count);
+					setGTOUniforms(origins, exponents3, alpha, coeffs, primitive_count);
 
-					if (print_progress) std::cout << "Cubemap: AO " << ao_count << "/" << ao_count << '\n';
-
-					fbo.bind();
-					va.draw(gto_shader);
-					fbo.unbind();
+					drawSlicesToFBO(vas, fbo, gto_shader, gto_compute, map);
 				}
 			}
 
@@ -531,7 +615,7 @@ namespace mol {
 				}
 			}
 
-			const uint thread_count = settings.cubemap_thread_count;
+			const uint thread_count = settings.cubemap_slice_count;
 
 			std::vector<std::unique_ptr<std::thread>> threads(thread_count - 1);
 
@@ -583,31 +667,28 @@ namespace mol {
 
 		bool inited = false;
 
-		fgr::VertexArray va;
+		std::vector<fgr::VertexArray> vas;
 		fgr::RenderTarget fbo;
 		if (settings.cubemap_use_gpu) {
+#if USE_COMPUTE_SHADERS
+			std::cout << "Using compute shaders for rendering\n";
+			if (!density_compute.loaded) {
+				density_compute = fgr::ComputeShader("shaders/volumol/density.comp", std::vector<std::string>{"occupation"});
+				density_compute.compile();
+				density_compute.work_group_count = glm::uvec3((glm::ivec3(cubemap.texture.width, cubemap.texture.height, cubemap.texture.depth) + 3) / 4);
+			}
+#else
+			std::cout << "Using geometry shaders for rendering\n";
 			if (!density_shader.loaded) {
 				density_shader = fgr::Shader("shaders/volumol/density.vert", "shaders/volumol/density.frag", "shaders/volumol/density.geom", std::vector<std::string>{"layer_count", "orbital", "occupation"});
 				density_shader.compile();
 			}
-			
+
 			density_shader.setInt(0, cubemap.texture.depth);
 			density_shader.setInt(1, fgr::TextureUnit::texture0);
-			
-			va.init();
 
-			va.vertices.resize(6 * cubemap.texture.depth);
-			for (int z = 0; z < cubemap.texture.depth; ++z) {
-				float zp = (float)z;
-				va.vertices[z * 6    ] = fgr::Vertex(glm::vec3(-1.0, -1.0, zp), glm::vec2(), glm::vec4());
-				va.vertices[z * 6 + 1] = fgr::Vertex(glm::vec3( 1.0, -1.0, zp), glm::vec2(), glm::vec4());
-				va.vertices[z * 6 + 2] = fgr::Vertex(glm::vec3(-1.0,  1.0, zp), glm::vec2(), glm::vec4());
-				va.vertices[z * 6 + 3] = fgr::Vertex(glm::vec3(-1.0,  1.0, zp), glm::vec2(), glm::vec4());
-				va.vertices[z * 6 + 4] = fgr::Vertex(glm::vec3( 1.0, -1.0, zp), glm::vec2(), glm::vec4());
-				va.vertices[z * 6 + 5] = fgr::Vertex(glm::vec3( 1.0,  1.0, zp), glm::vec2(), glm::vec4());
-			}
-
-			va.update();
+			generateSliceVertexArrays(vas, cubemap.texture.depth);
+#endif
 
 			cubemap.texture.createBuffer(GL_CLAMP_TO_BORDER, GL_LINEAR);
 			fbo = cubemap.texture.createFrameBuffer();
@@ -636,10 +717,13 @@ namespace mol {
 			if (settings.cubemap_use_gpu) {
 				fgr::setBlending(fgr::Blending::additive);
 				psi_map.texture.bindToUnit(fgr::TextureUnit::texture0);
+#if USE_COMPUTE_SHADERS
+				density_compute.setFloat(0, mo.occupation);
+				density_compute.bindImage(1, psi_map.texture.id, false, true, true, GL_RGBA16F);
+#else
 				density_shader.setFloat(2, mo.occupation);
-				fbo.bind();
-				va.draw(density_shader);
-				fbo.unbind();
+#endif
+				drawSlicesToFBO(vas, fbo, density_shader, density_compute, cubemap);
 				fgr::setBlending(fgr::Blending::linear);
 			}
 			else {
@@ -660,10 +744,10 @@ namespace mol {
 
 	uint findLUMO() {
 		double lowest_energy = 1000000000000000.;
-		uint result = 0;
+		uint result = mos.size();
 		for (uint i = 0; i < mos.size(); ++i) {
 			MolecularOrbital& mo = mos[i];
-			if (mo.occupation < 2.0 && mo.energy < lowest_energy) {
+			if (mo.occupation < 0.5 && mo.energy < lowest_energy) {
 				lowest_energy = mo.energy;
 				result = i;
 			}

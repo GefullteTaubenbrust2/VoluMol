@@ -71,7 +71,11 @@ namespace fgr {
 			if (window_created) return;
 
 			glfwInit();
+#if USE_COMPUTE_SHADERS
+			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+#else
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+#endif
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 			glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 			glfwWindowHint(GLFW_SAMPLES, samples);

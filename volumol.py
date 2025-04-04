@@ -74,7 +74,7 @@ class Settings:
     volumetric_iterations = 100
     volumetric_light_iterations = 5
     aa_quality = 1
-    cubemap_thread_count = 8
+    cubemap_slice_count = 1
     ao_iterations = 16
 
     smooth_bonds = False
@@ -245,7 +245,7 @@ def updateSettings(settings):
     ints[2] = settings.volumetric_iterations
     ints[3] = settings.volumetric_light_iterations
     ints[4] = settings.aa_quality
-    ints[5] = settings.cubemap_thread_count
+    ints[5] = settings.cubemap_slice_count
     ints[6] = settings.ao_iterations
 
     bools = (ctypes.c_bool * 7)(

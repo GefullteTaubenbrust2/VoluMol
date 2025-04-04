@@ -1,6 +1,14 @@
 cmake_minimum_required(VERSION 3.9)
 project(library VERSION 1.0.0 DESCRIPTION "VoluMol")
 
+option(COMPUTE_SHADERS "Use compute shaders on the GPU, this requires OpenGL 4.3+." OFF)
+
+if (COMPUTE_SHADERS)
+	add_definitions(-DUSE_COMPUTE_SHADERS=1)
+else(COMPUTE_SHADERS)
+	add_definitions(-DUSE_COMPUTE_SHADERS=0)
+endif(COMPUTE_SHADERS)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_BUILD_PARALLEL_LEVEL 8)
@@ -35,6 +43,7 @@ target_sources(
 	src/graphics/Animation.cpp
 	src/graphics/BitmapText.cpp
 	src/graphics/Blur.cpp
+	src/graphics/ComputeShader.cpp
 	src/graphics/FrameBuffer.cpp
 	src/graphics/GErrorHandler.cpp
 	src/graphics/glad.c
@@ -62,6 +71,7 @@ target_sources(
 	src/volumol/MolInterface.cpp
 	src/volumol/MolRenderer.cpp
 	src/volumol/Orbital.cpp
+	src/volumol/Settings.cpp
 	src/volumol/TextUtil.cpp
 	src/volumol/XYZReader.cpp
 	src/volumol/WFXReader.cpp

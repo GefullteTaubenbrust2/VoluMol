@@ -28,20 +28,6 @@ namespace mol {
 
 		double phi(const glm::dvec3& pos);
 	};
-
-	/*struct STO {
-		double e_r;
-		glm::ivec3 e_Y[6];
-		double c_Y[6];
-		double R[10];
-		uint n;
-
-		double coeff;
-
-		STO() = default;
-
-		STO(double e_r, int n, int l, int m, double c);
-	};*/
 	
 	struct CubeMap {
 		fgr::TextureHandle3D texture;

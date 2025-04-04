@@ -2,6 +2,7 @@
 
 #include "Constants.h"
 #include "Isosurface.h"
+#include "Settings.h"
 
 #include "../graphics/GErrorHandler.h"
 #include "../graphics/3D/ShadowMap.h"
@@ -12,7 +13,6 @@
 #include "../logic/Random.h"
 
 namespace mol {
-	RenderProperties settings;
 	CubeMap cubemap;
 	Molecule molecule;
 }
@@ -215,7 +215,7 @@ namespace mol::Renderer {
 		isosurface_mesh.indices.clear();
 		isosurface_mesh.update();
 
-		molecule.setBonds(settings);
+		molecule.setBonds();
 		molecule_positions.clear();
 		molecule_positions.reserve(molecule.atoms.size());
 		for (Atom a : molecule.atoms) {
@@ -318,7 +318,7 @@ namespace mol::Renderer {
 
 	void renderFrame(uint width, uint height) {
 		if (update_molecule) {
-			molecule.generateMesh(molecule_mesh, settings);
+			molecule.generateMesh(molecule_mesh);
 			update_molecule = false;
 		}
 

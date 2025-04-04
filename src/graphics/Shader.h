@@ -12,8 +12,6 @@
 #include "../logic/Types.h"
 
 namespace fgr {
-#define set_uniform(shader, type, args) glUniform ## type (shader.shader_program, args)
-
 	///<summary>
 	///A struct for handling OpenGL shaders and their uniform variables.
 	///</summary>
