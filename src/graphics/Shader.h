@@ -13,6 +13,11 @@
 
 namespace fgr {
 	///<summary>
+	///Wait for all queued draw calls to finish to prevent timeout.
+	///</summary>
+	void waitForDrawCalls();
+
+	///<summary>
 	///A struct for handling OpenGL shaders and their uniform variables.
 	///</summary>
 	struct Shader {

@@ -371,6 +371,7 @@ namespace mol {
 			va.draw(shader);
 		fbo.unbind();
 #endif
+		fgr::waitForDrawCalls();
 	}
 
 	void setGTOUniforms(glm::vec3* origins, glm::vec3* exponents3, float* alpha, float* coeffs, uint primitive_count) {

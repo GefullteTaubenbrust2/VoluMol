@@ -32,6 +32,10 @@ namespace fgr {
 		Shader::basic.setVec4(0, glm::vec4(1.));
 	}
 
+	void waitForDrawCalls() {
+		glFinish();
+	}
+
 	Shader::Shader(const Shader& copy) {
 		*this = copy;
 	}
