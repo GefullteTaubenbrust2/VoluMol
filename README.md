@@ -88,6 +88,7 @@ Controls the functions of the program. Some settings take effect at all times, o
 |`volumetric_shadowmap`|`bool`| Controls wether or not the ball-stick model and isosurfaces should cast a shadow on volumes. This has a slightly negative performance impact.|`True`|
 |`emissive_volume`|`bool`| When set to `True`, an emissive volume is used for volumetrics (looks a bit like plasma). When set to `False`, a scatter volume (looks more like clouds/smoke) is used instead. The emissive volume is computationally much cheaper.|`False`|
 |`volumetric_color_mode`|`bool`| Controls how colors for volumetrics are calculated. When set to `False`, MOs are colored based on sign, whereas when set to `True`, `mo_color_0` and `mo_color_1` are mixed based on function values. The mixing can be controlled with `volumetric_gradient`. |`False`|
+|`multicenter_coordination`|`bool`| MMG: When set to `True`, organic ligands with high hapticity will be drawn with only one coordinate bond. This helps make species like metallocenes look less cluttered. |`False`|
 
 
 ### `MOInfo`
