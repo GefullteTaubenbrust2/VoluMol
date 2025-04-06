@@ -207,6 +207,7 @@ DLLEXPORT void pyUpdateSettings(float* floats, float* vectors, int* ints, bool* 
 	settings.volumetric_shadowmap			= bools[4];
 	settings.emissive_volume				= bools[5];
 	settings.volumetric_color_mode			= bools[6];
+	settings.multicenter_coordination		= bools[7];
 
 	mol::Renderer::updateSettings(settings);
 }

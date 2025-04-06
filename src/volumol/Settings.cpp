@@ -5,16 +5,11 @@ namespace mol {
 	RenderProperties settings;
 
 	extern const glm::vec3 default_element_colors[119];
-	extern const uint nonmetals[23];
 
 	RenderProperties::RenderProperties() {
 		for (int i = 0; i < 119; ++i) {
 			materials[i].color = default_element_colors[i];
-			materials[i].metallicity = 1.0;
-		}
-
-		for (int i = 0; i < 23; ++i) {
-			materials[nonmetals[i]].metallicity = 0.0;
+			materials[i].metallicity = element_metallic[i];
 		}
 	}
 
@@ -138,30 +133,5 @@ namespace mol {
 		glm::vec3(0.17, 0.12, 0.03),	// Lv
 		glm::vec3(0.25, 0.14, 0.10),	// Ts
 		glm::vec3(0.03, 0.20, 0.24),	// Og
-	};
-
-	const uint nonmetals[23] = {
-		ghost_atom,
-		hydrogen,
-		helium,
-		boron,
-		carbon,
-		nitrogen,
-		oxygen,
-		fluorine,
-		neon,
-		silicon,
-		phosphorus,
-		sulfur, chlorine,
-		argon,
-		arsenic,
-		selenium,
-		bromine,
-		krypton,
-		tellurium,
-		iodine,
-		xenon,
-		astatine,
-		radon
 	};
 }

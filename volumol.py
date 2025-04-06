@@ -85,6 +85,7 @@ class Settings:
     volumetric_shadowmap = True
     emissive_volume = False
     volumetric_color_mode = False
+    multicenter_coordination = False
 
 SPIN_UP = False
 SPIN_DOWN = True
@@ -249,14 +250,15 @@ def updateSettings(settings):
     ints[5] = settings.cubemap_slice_count
     ints[6] = settings.ao_iterations
 
-    bools = (ctypes.c_bool * 7)(
+    bools = (ctypes.c_bool * 8)(
         settings.smooth_bonds,
         settings.premultiply_color,
         settings.cubemap_use_gpu,
         settings.orthographic,
         settings.volumetric_shadowmap,
         settings.emissive_volume,
-        settings.volumetric_color_mode
+        settings.volumetric_color_mode,
+        settings.multicenter_coordination
     )
 
     __library.pyUpdateSettings(floats, vec3s, ints, bools)

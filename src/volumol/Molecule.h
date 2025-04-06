@@ -34,6 +34,7 @@ namespace mol {
 	extern const float vdw_radii_A[119];
 	extern const float covalent_radii_A[119];
 	extern const std::string element_names[119];
+	extern const bool element_metallic[119];
 
 	enum ElementName {
 		ghost_atom = 0,
