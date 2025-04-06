@@ -25,7 +25,8 @@ __library.pyAddBond.argtypes = [ctypes.c_int, ctypes.c_int]
 __library.pyRemoveBond.argtypes = [ctypes.c_int, ctypes.c_int]
 __library.pySetTransform.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_float)]
 __library.pyMOCount.restype = ctypes.c_int
-__library.pyGetLUMO.restype = ctypes.c_int
+__library.pyGetHOMO.restype = ctypes.c_int
+__library.pyGetHOMO.argtypes = [ctypes.c_bool]
 __library.pyMOInfo.argtypes = [ctypes.c_int, ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_char_p), ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_bool)]
 __library.pyMOSetOccupation.argtypes = [ctypes.c_int, ctypes.c_float]
 __library.pyCubemapResolution.argtypes = [ctypes.c_int]
@@ -152,8 +153,8 @@ def setTransform(atom0, atom1, atom2, pos0, dir01, dir02):
 def MOCount():
     return __library.pyMOCount()
 
-def getLUMO():
-    return __library.pyGetLUMO()
+def getHOMO(spin):
+    return __library.pyGetHOMO(spin)
 
 def getMOInfo(orbital):
     energy = ctypes.c_float()
