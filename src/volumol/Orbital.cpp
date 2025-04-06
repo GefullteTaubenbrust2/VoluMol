@@ -743,13 +743,13 @@ namespace mol {
 		cubemap.texture.createBuffer(GL_CLAMP_TO_BORDER, GL_LINEAR);
 	}
 
-	uint findLUMO() {
-		double lowest_energy = 1000000000000000.;
-		uint result = mos.size();
+	uint findHOMO(Spin spin) {
+		double highest_energy = -1000000000000000.;
+		uint result = 0;
 		for (uint i = 0; i < mos.size(); ++i) {
 			MolecularOrbital& mo = mos[i];
-			if (mo.occupation < 0.5 && mo.energy < lowest_energy) {
-				lowest_energy = mo.energy;
+			if (mo.occupation > 0.5 && mo.energy > highest_energy && mo.spin == spin) {
+				highest_energy = mo.energy;
 				result = i;
 			}
 		}

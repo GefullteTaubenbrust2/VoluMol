@@ -89,7 +89,7 @@ namespace mol {
 
 	void densityCubeMapMO();
 
-	uint findLUMO();
+	uint findHOMO(Spin spin);
 
 	uint MOcount();
 

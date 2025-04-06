@@ -221,15 +221,15 @@ namespace mol::WFX {
 				Spin spin = Spin::alpha;
 
 				if (safeGetSubstr(l, offset, 14) == "Alpha and Beta") {
-					spin == Spin::alpha;
+					spin = Spin::alpha;
 					offset += 14;
 				}
 				else if (safeGetSubstr(l, offset, 5) == "Alpha") {
-					spin == Spin::alpha;
+					spin = Spin::alpha;
 					offset += 5;
 				}
 				else if (safeGetSubstr(l, offset, 4) == "Beta") {
-					spin == Spin::beta;
+					spin = Spin::beta;
 					offset += 4;
 				}
 				else {

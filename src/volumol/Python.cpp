@@ -92,8 +92,8 @@ DLLEXPORT int pyMOCount() {
 	return mol::MOcount();
 }
 
-DLLEXPORT int pyGetLUMO() {
-	return mol::findLUMO();
+DLLEXPORT int pyGetHOMO(bool spin) {
+	return mol::findHOMO(spin ? mol::Spin::beta : mol::Spin::alpha);
 }
 
 DLLEXPORT void pyMOInfo(int orbital, float& energy, char const** name, float& occupation, bool& spin) {
