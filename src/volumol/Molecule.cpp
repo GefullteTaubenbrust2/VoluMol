@@ -18,80 +18,78 @@ namespace mol {
 				}
 			}
 		}
-		if (settings.multicenter_coordination) {
-			for (int i = 0; i < bonds.size(); ++i) {
-				glm::ivec2 bond = bonds[i];
-				if (atoms[bond.x].Z != carbon) {
-					int x = bond.x;
-					bond.x = bond.y;
-					bond.y = x;
+		if (!settings.multicenter_coordination) return;
+		for (int i = 0; i < bonds.size(); ++i) {
+			glm::ivec2 bond = bonds[i];
+			if (atoms[bond.x].Z != carbon) {
+				int x = bond.x;
+				bond.x = bond.y;
+				bond.y = x;
+			}
+			
+			if (atoms[bond.x].Z != carbon || !element_metallic[atoms[bond.y].Z]) continue;
+			
+			int metallic_index = bond.y;
+			bonds.erase(bonds.begin() + i);
+			--i;
+
+			std::vector<int> ligand_centers{ bond.x };
+			std::vector<int> explore{ bond.x };
+			std::vector<int> candidates;
+
+			while (explore.size()) {
+				int current = explore[explore.size() - 1];
+				explore.resize(explore.size() - 1);
+				for (int j = 0; j < bonds.size(); ++j) {
+					bond = bonds[j];
+					if (atoms[bond.x].Z != carbon || atoms[bond.y].Z != carbon) continue;
+
+					int new_candidate = 0;
+					if (bond.x == current) new_candidate = bond.y;
+					else if (bond.y == current) new_candidate = bond.x;
+					else continue;
+
+					bool contained = false;
+					for (int x : ligand_centers) if (x == new_candidate) {
+						contained = true;
+						break;
+					}
+					if (!contained) candidates.push_back(new_candidate);
 				}
-				if (atoms[bond.x].Z == carbon && element_metallic[atoms[bond.y].Z]) {
-					int metallic_index = bond.y;
+				while(candidates.size()) {
+					current = candidates[candidates.size() - 1];
+					candidates.resize(candidates.size() - 1);
+					for (int j = 0; j < bonds.size(); ++j) {
+						bond = bonds[j];
+						if (!(bond.x == current && bond.y == metallic_index) && !(bond.y == current && bond.x == metallic_index)) continue;
 
-					bonds.erase(bonds.begin() + i);
-					--i;
-
-					std::vector<int> ligand_centers{ bond.x };
-					std::vector<int> explore{ bond.x };
-					std::vector<int> candidates;
-
-					while (explore.size()) {
-						int current = explore[explore.size() - 1];
-						explore.resize(explore.size() - 1);
-						for (int j = 0; j < bonds.size(); ++j) {
-							bond = bonds[j];
-							if (atoms[bond.x].Z == carbon && atoms[bond.y].Z == carbon) {
-								int new_candidate = 0;
-								if (bond.x == current) new_candidate = bond.y;
-								else if (bond.y == current) new_candidate = bond.x;
-								else continue;
-
-								bool contained = false;
-								for (int x : ligand_centers) if (x == new_candidate) {
-									contained = true;
-									break;
-								}
-								if (!contained) candidates.push_back(new_candidate);
-							}
+						bonds.erase(bonds.begin() + j);
+						--j;
+						bool contained = false;
+						for (int x : explore) if (x == current) {
+							contained = true;
+							break;
 						}
-						while(candidates.size()) {
-							current = candidates[candidates.size() - 1];
-							candidates.resize(candidates.size() - 1);
-							for (int j = 0; j < bonds.size(); ++j) {
-								bond = bonds[j];
-								if ((bond.x == current && bond.y == metallic_index) || (bond.y == current && bond.x == metallic_index)) {
-									bonds.erase(bonds.begin() + j);
-									--j;
-									bool contained = false;
-									for (int x : explore) if (x == current) {
-										contained = true;
-										break;
-									}
-									if (!contained) {
-										explore.push_back(current);
-										ligand_centers.push_back(current);
-									}
-								}
-							}
+						if (!contained) {
+							explore.push_back(current);
+							ligand_centers.push_back(current);
 						}
-					}
-
-					if (ligand_centers.size() == 1) {
-						++i;
-						bonds.insert(bonds.begin() + i, glm::ivec2(ligand_centers[0], metallic_index));
-					}
-					else {
-						glm::vec3 avg_position = glm::vec3(0.);
-						for (int a : ligand_centers) {
-							avg_position += atoms[a].position;
-						}
-						avg_position /= ligand_centers.size();
-
-						bonds.push_back(glm::ivec2(atoms.size(), metallic_index));
-						atoms.push_back(Atom(ghost_atom, avg_position));
 					}
 				}
+			}
+			if (ligand_centers.size() == 1) {
+				++i;
+				bonds.insert(bonds.begin() + i, glm::ivec2(ligand_centers[0], metallic_index));
+			}
+			else {
+				glm::vec3 avg_position = glm::vec3(0.);
+				for (int a : ligand_centers) {
+					avg_position += atoms[a].position;
+				}
+				avg_position /= ligand_centers.size();
+
+				bonds.push_back(glm::ivec2(atoms.size(), metallic_index));
+				atoms.push_back(Atom(ghost_atom, avg_position));
 			}
 		}
 	}
