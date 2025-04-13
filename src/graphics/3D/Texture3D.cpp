@@ -78,9 +78,7 @@ namespace fgr {
 	void TextureHandle3D::createBuffer(int wrap, int filter) {
 		graphics_check_external();
 
-		if (id) return;
-
-		glGenTextures(1, &id);
+		if (!id) glGenTextures(1, &id);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_3D, id);
 

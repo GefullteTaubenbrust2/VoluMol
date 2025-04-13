@@ -691,7 +691,7 @@ namespace mol {
 			generateSliceVertexArrays(vas, cubemap.texture.depth);
 #endif
 
-			cubemap.texture.createBuffer(GL_CLAMP_TO_BORDER, GL_LINEAR);
+			if (!cubemap.texture.id) cubemap.texture.createBuffer(GL_CLAMP_TO_BORDER, GL_LINEAR);
 			fbo = cubemap.texture.createFrameBuffer();
 			fbo.clear(glm::vec4(0.), false);
 		}
@@ -740,7 +740,6 @@ namespace mol {
 		else {
 			cubemap.texture.syncTexture();
 		}
-		cubemap.texture.createBuffer(GL_CLAMP_TO_BORDER, GL_LINEAR);
 	}
 
 	uint findHOMO(Spin spin) {

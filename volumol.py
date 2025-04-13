@@ -139,6 +139,9 @@ def loadWFXFile(path):
 def loadXYZFile(path):
     __library.pyLoadXYZFile(path.encode("utf-8"))
 
+def loadCubeFile(path):
+    __library.pyLoadCubeFile(path.encode("utf-8"))
+
 def getAtom(id):
     Z = ctypes.c_int()
     x = ctypes.c_float()

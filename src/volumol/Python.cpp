@@ -2,9 +2,10 @@
 #include "Molecule.h"
 #include "Molden.h"
 #include "WFXReader.h"
+#include "XYZReader.h"
+#include "CubeReader.h"
 #include "Orbital.h"
 #include "MolRenderer.h"
-#include "XYZReader.h"
 #include "Settings.h"
 #include "../logic/TextReading.h"
 #include "../graphics/Window.h"
@@ -65,6 +66,10 @@ DLLEXPORT void pyLoadWFXFile(char const* path) {
 
 DLLEXPORT void pyLoadXYZFile(char const* path) {
 	mol::Renderer::setMolecule(mol::readXYZ(flo::readFile(path)));
+}
+
+DLLEXPORT void pyLoadCubeFile(char const* path) {
+	mol::Cub::readFile(path);
 }
 
 DLLEXPORT void pyGetAtom(int id, int& Z, float& x, float& y, float& z) {

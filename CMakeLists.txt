@@ -64,6 +64,7 @@ target_sources(
 	src/logic/SpriteSheet.cpp
 	src/logic/TextReading.cpp
 	
+	src/volumol/CubeReader.cpp
 	src/volumol/Isosurface.cpp
 	src/volumol/MeshGenerator.cpp
 	src/volumol/Molden.cpp
@@ -73,8 +74,8 @@ target_sources(
 	src/volumol/Orbital.cpp
 	src/volumol/Settings.cpp
 	src/volumol/TextUtil.cpp
-	src/volumol/XYZReader.cpp
 	src/volumol/WFXReader.cpp
+	src/volumol/XYZReader.cpp
 )
 
 set_target_properties(library PROPERTIES PREFIX "")
