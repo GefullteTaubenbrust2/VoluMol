@@ -140,7 +140,7 @@ Loads a XYZ file and disables previous isosurfaces/volumetrics.
 
 
 ### `loadCubeFile(path)`
-Loads a Gaussian cube file and disables previous isosurfaces/volumetrics. The present volumetric data can be visualized directly using `setIsosurface()` and `setVolumetric()`.
+Loads a Gaussian cube file and disables previous isosurfaces/volumetrics. The present volumetric data can be visualized directly using `setIsosurface()` and/or `setVolumetric()`.
 - `path` Relative path to the file including its name.
 
 
