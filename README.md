@@ -139,6 +139,11 @@ Loads a XYZ file and disables previous isosurfaces/volumetrics.
 - `path` Relative path to the file including its name.
 
 
+### `loadCubeFile(path)`
+Loads a Gaussian cube file and disables previous isosurfaces/volumetrics. The present volumetric data can be visualized directly using `setIsosurface()` and `setVolumetric()`.
+- `path` Relative path to the file including its name.
+
+
 ### `getAtom(id)`
 Returns an atom corresponding to the provided `id`. Some file formats assign IDs to atoms which should be used here. Otherwise, atoms are labeled `0`, `1`, ... by the order in which they appear in the respective file.
 
