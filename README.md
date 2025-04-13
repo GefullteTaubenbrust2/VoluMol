@@ -175,8 +175,9 @@ setTransform(0, 2, 1, (0, 0, 0), (1, 0, 0), (0, 1, 0))
 The number of loaded MOs.
 
 
-### `getLUMO()`
-Returns the index of the LUMO (or rather, the lowest orbital with an occupation of less than `1`). In the closed-shell case, this means the HOMO is `getLUMO() - 1`.
+### `getHOMO(spin)`
+Returns the index of the HOMO (or rather, the highest orbital with an occupation greater than `0.5`) for a given spin.
+- `spin`: The spin to look for. Ideally use the `SPIN_UP`/`SPIN_DOWN` constants. For closed-shell systems, use `SPIN_UP`.
 
 
 ### `getMOInfo(orbital)`
