@@ -123,32 +123,42 @@ namespace mol::Cub {
 			l = file[line];
 		}
 
+		int number_of_ints = 0;
 		if (number_of_atoms < 0) {
-			std::cout << "Read Gaussian Cube file. Number of atoms < 0 not supported. Skipping MO data.\n";
-			Renderer::setMolecule(molecule);
-			return;
+			skipWhitespace(l, offset);
+			number_of_ints = readInt(l, offset, error);
+			if (error) {
+				std::cerr << "Could not read number of IDs!\n";
+				return;
+			}
 		}
-
 		skipWhitespace(l, offset);
+
+		for (int i = 0; i < number_of_ints; ++i) {
+			if (offset >= l.size()) {
+				++line;
+				if (line >= file.size()) {
+					std::cerr << "Not enough data provided!\n";
+					return;
+				}
+				offset = 0;
+				l = file[line];
+
+				skipWhitespace(l, offset);
+			}
+
+			int data = readInt(l, offset, error);
+			skipWhitespace(l, offset);
+
+			if (error) {
+				std::cerr << "Error reading IDs!\n";
+				return;
+			}
+		}
 
 		const float volume_norm = glm::pow(a0_A, 1.5f);
 
 		for (int i = 0; i < resolution.x * resolution.y * resolution.z; ++i) {
-			int z = i % resolution.x;
-			int y = i / resolution.x % resolution.y;
-			int x = i / (resolution.x * resolution.y);
-			int j = 4 * (x + resolution.x * (y + resolution.y * z));
-
-			cubemap.texture.data[j] = readFloat(l, offset, error) / volume_norm;
-			cubemap.texture.data[j + 1] = 0.f;
-			cubemap.texture.data[j + 2] = 0.f;
-			cubemap.texture.data[j + 3] = 0.f;
-
-			if (error) {
-				std::cerr << "Error reading cubemap data!\n";
-				return;
-			}
-
 			if (offset >= l.size()) {
 				++line;
 				if (line >= file.size()) {
@@ -160,7 +170,23 @@ namespace mol::Cub {
 
 				skipWhitespace(l, offset);
 			} 
-			else skipWhitespace(l, offset);
+
+			int z = i % resolution.x;
+			int y = i / resolution.x % resolution.y;
+			int x = i / (resolution.x * resolution.y);
+			int j = 4 * (x + resolution.x * (y + resolution.y * z));
+
+			cubemap.texture.data[j] = readFloat(l, offset, error) / volume_norm;
+			skipWhitespace(l, offset);
+
+			cubemap.texture.data[j + 1] = 0.f;
+			cubemap.texture.data[j + 2] = 0.f;
+			cubemap.texture.data[j + 3] = 0.f;
+
+			if (error) {
+				std::cerr << "Error reading cubemap data!\n";
+				return;
+			}
 		}
 
 		std::cout << "Successfully read Gaussian Cube file!\n";
