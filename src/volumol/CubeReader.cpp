@@ -91,7 +91,7 @@ namespace mol::Cub {
 		cubemap.resize(resolution);
 		cubemap.size = glm::vec3(glm::length(axes[0]) * resolution.x, glm::length(axes[1]) * resolution.y, glm::length(axes[2]) * resolution.z);
 
-		for (int i = 0; i < number_of_atoms; ++i) {
+		for (int i = 0; i < molecule.atoms.size(); ++i) {
 			skipWhitespace(l, offset);
 			molecule.atoms[i].Z = readInt(l, offset, error);
 
