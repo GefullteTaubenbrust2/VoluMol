@@ -63,7 +63,6 @@ namespace mol::Molden {
 			return true;
 		}
 		else if (findKeyword(l, "[7F]", column)) {
-			spherical_d = false;
 			spherical_f = true;
 			return true;
 		}
@@ -251,7 +250,10 @@ namespace mol::Molden {
 		atom_positions.clear();
 
 		for (; line < file.size(); nextLine()) {
-			handleFlag(l);
+			if (handleFlag(l)) {
+				file.erase(file.begin() + line);
+				--line;
+			}
 		}
 
 		line = 0;
