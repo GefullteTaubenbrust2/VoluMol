@@ -49,7 +49,7 @@ namespace flo {
 	///Get the state of a given mouse button.
 	///</summary>
 	///<param name="mouse_button">The mouse button.</param>
-	///<returns>The success, false being a success.</returns>
+	///<returns>The input type.</returns>
 	InputType getMouseButton(const MouseButton mouse_button);
 
 	///<summary>

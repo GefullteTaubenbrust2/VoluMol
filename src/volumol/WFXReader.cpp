@@ -5,9 +5,6 @@
 #include "MolRenderer.h"
 #include "Constants.h"
 
-#include "../logic/MathUtil.h"
-#include "../logic/TextReading.h"
-
 #include <vector>
 
 namespace mol {
@@ -16,42 +13,25 @@ namespace mol {
 }
 
 namespace mol::WFX {
-	std::vector<std::string> file;
-	uint line = 0;
-	uint offset = 0;
-	std::string l, cur_keyword;
+	using namespace FileReader;
+
+	std::string cur_keyword;
 	Molecule molecule;
 
-	void seekKeyWord(const std::string& keyword) {
-		line = 0;
+	void seekKeyWord(const std::string& keyword, uint from_line = 0) {
+		setLineNumber(from_line);
 		const std::string search_string = "<" + keyword + '>';
 		cur_keyword = "</" + keyword + ">";
-		for (; line < file.size(); ++line) {
-			uint offset = 0;
-			l = file[line];
-			skipWhitespace(l, offset);
-			if (findKeyword(l, search_string, offset)) break;
-		}
-	}
-
-	void seekKeyWord(const std::string& keyword, uint from_line) {
-		line = from_line;
-		const std::string search_string = "<" + keyword + '>';
-		cur_keyword = "</" + keyword + ">";
-		for (; line < file.size(); ++line) {
-			uint offset = 0;
-			l = file[line];
-			skipWhitespace(l, offset);
-			if (findKeyword(l, search_string, offset)) break;
+		for (; getLineNumber() < getLineCount(); nextLine()) {
+			skipWhitespace();
+			if (findKeyword(search_string)) break;
 		}
 	}
 
 	bool nextTerminates() {
-		offset = 0;
-		++line;
-		l = file[line];
-		skipWhitespace(l, offset);
-		if (findKeyword(l, cur_keyword, offset)) return true;
+		nextLine();
+		skipWhitespace();
+		if (findKeyword(cur_keyword)) return true;
 		return false;
 	}
 
@@ -79,36 +59,36 @@ namespace mol::WFX {
 
 	void loadMOs() {
 		seekKeyWord("Number of Primitives");
-		if (line >= file.size()) return;
+		if (endOfFile()) return;
 
 		while (!nextTerminates()) {
 			bool error = false;
-			int number = readInt(l, offset, error);
+			int number = readInt(error);
 			if (!error) {
 				basis_set.resize(number);
 				break;
 			}
 		}
 		if (!basis_set.size()) {
-			std::cerr << "Molecule has no basis functions\n";
+			throwError("Molecule has no basis functions");
 			return;
 		}
 
 		seekKeyWord("Primitive Centers");
-		if (line >= file.size()) {
-			std::cerr << "Could not find primitive centers\n";
+		if (endOfFile()) {
+			throwError("Could not find primitive centers");
 			return;
 		}
 		uint index = 0;
 		while (!nextTerminates()) {
-			while (offset < l.size()) {
+			while (!endOfLine()) {
 				bool error = false;
-				int number = readInt(l, offset, error);
+				int number = readInt(error);
 				if (error || number < 1 || number > basis_set.size()) {
-					std::cerr << "Invalid entry for primitive center\n";
+					throwError("Invalid entry for primitive center");
 					return;
 				}
-				skipWhitespace(l, offset);
+				skipWhitespace();
 				basis_set[index].origin = molecule.atoms[number - 1].position;
 				if (index >= basis_set.size()) break;
 				++index;
@@ -116,21 +96,21 @@ namespace mol::WFX {
 		}
 
 		seekKeyWord("Primitive Types");
-		if (line >= file.size()) {
-			std::cerr << "Could not find primitive types\n";
+		if (endOfFile()) {
+			throwError("Could not find primitive types");
 			return;
 		}
 		index = 0;
 		while (!nextTerminates()) {
-			while (offset < l.size()) {
+			while (!endOfLine()) {
 				bool error = false;
-				int number = readInt(l, offset, error);
+				int number = readInt(error);
 				if (error || number < 1 || number > 56) {
-					std::cerr << "Unsupported entry for primitive type\n";
+					throwError("Unsupported entry for primitive type");
 					return;
 				}
 				number--;
-				skipWhitespace(l, offset);
+				skipWhitespace();
 				basis_set[index].gto_primitives.resize(1);
 				basis_set[index].gto_primitives[0] = GTO(1.0, gto_exponents[number].x, gto_exponents[number].y, gto_exponents[number].z, 1.0);
 				if (index >= basis_set.size()) break;
@@ -139,20 +119,20 @@ namespace mol::WFX {
 		}
 
 		seekKeyWord("Primitive Exponents");
-		if (line >= file.size()) {
-			std::cerr << "Could not find primitive exponents\n";
+		if (endOfFile()) {
+			throwError("Could not find primitive exponents");
 			return;
 		}
 		index = 0;
 		while (!nextTerminates()) {
-			while (offset < l.size()) {
+			while (!endOfLine()) {
 				bool error = false;
-				double number = readFloat(l, offset, error);
+				double number = readFloat(error);
 				if (error) {
-					std::cerr << "Invalid entry for exponent\n";
+					throwError("Invalid entry for exponent");
 					return;
 				}
-				skipWhitespace(l, offset);
+				skipWhitespace();
 				basis_set[index].gto_primitives.resize(1);
 				GTO& gto = basis_set[index].gto_primitives[0];
 
@@ -169,20 +149,20 @@ namespace mol::WFX {
 		}
 		
 		seekKeyWord("Molecular Orbital Energies");
-		if (line >= file.size()) {
-			std::cerr << "Could not find MO energies\n";
+		if (endOfFile()) {
+			throwError("Could not find MO energies");
 			return;
 		}
 		index = 0;
 		while (!nextTerminates()) {
-			while (offset < l.size()) {
+			while (!endOfLine()) {
 				bool error = false;
-				double number = readFloat(l, offset, error);
+				double number = readFloat(error);
 				if (error) {
-					std::cerr << "Invalid entry for energy\n";
+					throwError("Invalid entry for energy");
 					return;
 				}
-				skipWhitespace(l, offset);
+				skipWhitespace();
 				if (index >= mos.size()) mos.resize(index + 1);
 				mos[index].energy = number;
 				++index;
@@ -190,20 +170,20 @@ namespace mol::WFX {
 		}
 
 		seekKeyWord("Molecular Orbital Occupation Numbers");
-		if (line >= file.size()) {
-			std::cerr << "Could not find MO occupation\n";
+		if (endOfFile()) {
+			throwError("Could not find MO occupation");
 			return;
 		}
 		index = 0;
 		while (!nextTerminates()) {
-			while (offset < l.size()) {
+			while (!endOfLine()) {
 				bool error = false;
-				double number = readFloat(l, offset, error);
+				double number = readFloat(error);
 				if (error) {
-					std::cerr << "Invalid entry for occupation\n";
+					throwError("Invalid entry for occupation");
 					return;
 				}
-				skipWhitespace(l, offset);
+				skipWhitespace();
 				if (index >= mos.size()) mos.resize(index + 1);
 				mos[index].occupation = number;
 				++index;
@@ -211,33 +191,24 @@ namespace mol::WFX {
 		}
 
 		seekKeyWord("Molecular Orbital Spin Types");
-		if (line >= file.size()) {
-			std::cerr << "Could not find MO spin\n";
+		if (endOfFile()) {
+			throwError("Could not find MO spin");
 			return;
 		}
 		index = 0;
 		while (!nextTerminates()) {
-			while (offset < l.size()) {
+			while (!endOfLine()) {
 				Spin spin = Spin::alpha;
 
-				if (safeGetSubstr(l, offset, 14) == "Alpha and Beta") {
-					spin = Spin::alpha;
-					offset += 14;
-				}
-				else if (safeGetSubstr(l, offset, 5) == "Alpha") {
-					spin = Spin::alpha;
-					offset += 5;
-				}
-				else if (safeGetSubstr(l, offset, 4) == "Beta") {
-					spin = Spin::beta;
-					offset += 4;
-				}
+				if (findKeyword("Alpha and Beta")) spin = Spin::alpha;
+				else if (findKeyword("Alpha")) spin = Spin::alpha;
+				else if (findKeyword("Beta")) spin = Spin::beta;
 				else {
-					std::cerr << "Invalid entry for spin\n";
+					throwError("Invalid entry for spin");
 					return;
 				}
 
-				skipWhitespace(l, offset);
+				skipWhitespace();
 				if (index >= mos.size()) mos.resize(index + 1);
 				mos[index].spin = spin;
 				++index;
@@ -245,48 +216,43 @@ namespace mol::WFX {
 		}
 
 		seekKeyWord("Molecular Orbital Primitive Coefficients");
-		if (line >= file.size()) {
-			std::cerr << "Could not find LCAO coefficients\n";
+		if (endOfFile()) {
+			throwError("Could not find LCAO coefficients");
 			return;
 		}
 
 		while (true) {
-			seekKeyWord("MO Number", line);
+			seekKeyWord("MO Number", getLineNumber());
 			MolecularOrbital* mo = nullptr;
-			if (line >= file.size()) {
+			if (endOfFile()) {
 				break;
 			}
 
 			while (!nextTerminates()) {
 				bool error = false;
-				int number = readInt(l, offset, error);
+				int number = readInt(error);
 				if (!error && number > 0 && number <= mos.size()) {
 					mo = &mos[number - 1];
-					break;
 				}
 			}
 			if (!mo) {
-				std::cerr << "MO number not found\n";
+				throwError("MO number not found");
 				return;
 			}
 			
 			mo->basis = &basis_set;
 			mo->lcao_coefficients.resize(basis_set.size());
 
-			++line;
-
 			index = 0;
-			while (line < file.size()) {
-				++line;
-				offset = 0;
-				l = file[line];
-				skipWhitespace(l, offset);
+			while (!endOfFile()) {
+				nextLine();
+				skipWhitespace();
 
-				while (offset < l.size()) {
+				while (!endOfLine()) {
 					bool error = false;
-					double number = readFloat(l, offset, error);
+					double number = readFloat(error);
 					if (error) break;
-					skipWhitespace(l, offset);
+					skipWhitespace();
 
 					mo->lcao_coefficients[index] = number;
 					++index;
@@ -297,51 +263,45 @@ namespace mol::WFX {
 		}
 	}
 
-	void loadFile(const std::string& path) {
-		file = flo::readFile(path);
+	void loadFile() {
 		molecule.atoms.clear();
 		basis_set.clear();
 		mos.clear();
 
-		if (!file.size()) {
-			std::cerr << "File not found or empty\n";
-			return;
-		}
-
 		seekKeyWord("Number of Nuclei");
-		if (line >= file.size()) {
-			std::cerr << "Could not find number of nuclei\n";
+		if (endOfFile()) {
+			throwError("Could not find number of nuclei");
 			return;
 		}
 
 		while (!nextTerminates()) {
 			bool error = false;
-			int number = readInt(l, offset, error);
+			int number = readInt(error);
 			if (!error) {
 				molecule.atoms.resize(number);
 				break;
 			}
 		}
 		if (!molecule.atoms.size()) {
-			std::cerr << "Molecule has no atoms\n";
+			throwError("Molecule has no atoms");
 			return;
 		}
 
 		seekKeyWord("Atomic Numbers");
-		if (line >= file.size()) {
-			std::cerr << "Could not find atomic numbers\n";
+		if (endOfFile()) {
+			throwError("Could not find atomic numbers");
 			return;
 		}
 		uint atom = 0;
 		while (!nextTerminates()) {
-			while (offset < l.size()) {
+			while (!endOfLine()) {
 				bool error = false;
-				int number = readInt(l, offset, error);
+				int number = readInt(error);
 				if (error) {
-					std::cerr << "Invalid entry for atomic number\n";
+					throwError("Invalid entry for atomic number");
 					return;
 				}
-				skipWhitespace(l, offset);
+				skipWhitespace();
 				molecule.atoms[atom].Z = number;
 				++atom;
 				if (atom >= molecule.atoms.size()) break;
@@ -349,20 +309,20 @@ namespace mol::WFX {
 		}
 
 		seekKeyWord("Nuclear Cartesian Coordinates");
-		if (line >= file.size()) {
-			std::cerr << "Could not find nuclear cartesian coordinates\n";
+		if (endOfFile()) {
+			throwError("Could not find nuclear cartesian coordinates");
 			return;
 		}
 		uint index = 0;
 		while (!nextTerminates()) {
-			while (offset < l.size()) {
+			while (!endOfLine()) {
 				bool error = false;
-				double number = readFloat(l, offset, error);
+				double number = readFloat(error);
 				if (error) {
-					std::cerr << "Invalid entry for nuclear coordinates\n";
+					throwError("Invalid entry for nuclear coordinates");
 					return;
 				}
-				skipWhitespace(l, offset);
+				skipWhitespace();
 				molecule.atoms[index / 3].position[index % 3] = number * a0_A;
 				++index;
 				if (index / 3 >= molecule.atoms.size()) break;

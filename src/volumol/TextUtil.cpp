@@ -1,6 +1,93 @@
 #include "TextUtil.h"
 
-namespace mol {
+#include <iostream>
+
+#include "../logic/TextReading.h"
+
+namespace mol::FileReader {
+	std::vector<std::string> file;
+	std::string l;
+	uint line, offset;
+
+	bool readFile(const std::string& path) {
+		file = flo::readFile(path);
+		if (!file.size()) {
+			std::cerr << "File is empty or does not exist\n";
+			return false;
+		}
+		line = 0;
+		offset = 0;
+		if (file.size()) l = file[0];
+		else l = "";
+		return true;
+	}
+
+	void setFile(const std::vector<std::string>& _file) {
+		file = _file;
+		line = 0;
+		offset = 0;
+		if (file.size()) l = file[0];
+		else l = "";
+	}
+
+	void throwError(const std::string& message) {
+		std::cerr << "Error occured reading file: \n" << message << "\nIn line: " << line << "\nOffending content:\n";
+		for (int i = line - 2; i <= line + 2; ++i) {
+			if (i < 0) i = 0;
+			if (i >= file.size()) break;
+			std::cerr << file[i];
+			if (i == line) std::cerr << " <<< ERROR";
+			std::cerr << '\n';
+		}
+	}
+
+	std::string& getLine() {
+		return l;
+	}
+
+	uint getLineNumber() {
+		return line;
+	}
+
+	void setLineNumber(uint _line) {
+		line = _line;
+		offset = 0;
+		if (line < file.size()) l = file[line];
+		else l = "";
+	}
+
+	void nextLine() {
+		++line;
+		offset = 0;
+		if (line < file.size()) l = file[line];
+		else l = "";
+	}
+
+	void previousLine() {
+		if (!line) return;
+		--line;
+		offset = 0;
+		if (line < file.size()) l = file[line];
+		else l = "";
+	}
+
+	uint getLineCount() {
+		return file.size();
+	}
+
+	bool endOfFile() {
+		return line >= file.size();
+	}
+
+	bool endOfLine() {
+		return offset >= l.size();
+	}
+
+	void ignoreLine() {
+		if (line >= file.size()) return;
+		file.erase(file.begin() + line);
+	}
+
 	bool isWhiteSpace(char c) {
 		return c == ' ' || c == '\n' || c == '\r' || c == '\t';
 	}
@@ -47,22 +134,22 @@ namespace mol {
 		return str.substr(start, size);
 	}
 
-	int readInt(const std::string& str, uint& offset, bool& error) {
-		char c = safeGetChar(str, offset);
+	int readInt(bool& error) {
+		char c = safeGetChar(l, offset);
 		int start_offset = offset;
 		if (c != '-' && c != '+' && !isDigit(c)) {
 			error = true;
 			return 0;
 		}
 		++offset;
-		for (; offset < str.size(); ++offset) {
-			if (!isDigit(str[offset])) break;
+		for (; offset < l.size(); ++offset) {
+			if (!isDigit(l[offset])) break;
 		}
-		return std::stoi(safeGetSubstr(str, start_offset, offset - start_offset));
+		return std::stoi(safeGetSubstr(l, start_offset, offset - start_offset));
 	}
 
-	double readFloat(const std::string& str, uint& offset, bool& error) {
-		char c = safeGetChar(str, offset);
+	double readFloat(bool& error) {
+		char c = safeGetChar(l, offset);
 		int start_offset = offset;
 		if (c != '-' && c != '+' && !isDigit(c)) {
 			error = true;
@@ -71,8 +158,8 @@ namespace mol {
 		++offset;
 		bool period = false;
 		bool exponential = false;
-		for (; offset < str.size(); ++offset) {
-			c = str[offset];
+		for (; offset < l.size(); ++offset) {
+			c = l[offset];
 			if (c == '.') {
 				if (period) break;
 				period = true;
@@ -83,7 +170,7 @@ namespace mol {
 				period = true;
 				exponential = true;
 				++offset;
-				c = str[offset];
+				c = safeGetChar(l, offset);
 				if (c != '-' && c != '+' && !isDigit(c)) {
 					error = true;
 					return 0.0;
@@ -92,30 +179,30 @@ namespace mol {
 			}
 			if (!isDigit(c)) break;
 		}
-		return std::stod(safeGetSubstr(str, start_offset, offset - start_offset));
+		return std::stod(safeGetSubstr(l, start_offset, offset - start_offset));
 	}
 
-	std::string readText(const std::string& str, uint& offset) {
+	std::string readText() {
 		uint start = offset;
-		for (; offset < str.size(); ++offset) {
-			if (!isText(str[offset]) && !isDigit(str[offset])) break;
+		for (; offset < l.size(); ++offset) {
+			if (!isText(l[offset]) && !isDigit(l[offset])) break;
 		}
-		return safeGetSubstr(str, start, offset - start);
+		return safeGetSubstr(l, start, offset - start);
 	}
 
-	bool findKeyword(const std::string& str, const std::string& keyword, uint offset) {
-		uint start = offset;
-		if (str.length() < offset + keyword.length()) return false;
-		for (; offset < str.size(); ++offset) {
-			if (offset >= start + keyword.size()) return true;
-			if (str[offset] != keyword[offset - start]) return false;
+	bool findKeyword(const std::string& keyword) {
+		if (l.size() < offset + keyword.size()) return false;
+		for (uint i = offset; i < l.size(); ++i) {
+			if (i >= offset + keyword.size()) break;
+			if (l[i] != keyword[i - offset]) return false;
 		}
+		offset += keyword.size();
 		return true;
 	}
 
-	void skipWhitespace(const std::string& str, uint& offset) {
-		for (; offset < str.size(); ++offset) {
-			if (!isWhiteSpace(str[offset])) break;
+	void skipWhitespace() {
+		for (; offset < l.size(); ++offset) {
+			if (!isWhiteSpace(l[offset])) break;
 		}
 	}
 }

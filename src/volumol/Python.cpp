@@ -7,6 +7,8 @@
 #include "Orbital.h"
 #include "MolRenderer.h"
 #include "Settings.h"
+#include "TextUtil.h"
+
 #include "../logic/TextReading.h"
 #include "../graphics/Window.h"
 
@@ -57,19 +59,23 @@ DLLEXPORT void pyDispose() {
 }
 
 DLLEXPORT void pyLoadMoldenFile(char const* path) {
-	mol::Molden::loadFile(path);
+	mol::FileReader::readFile(path);
+	mol::Molden::loadFile();
 }
 
 DLLEXPORT void pyLoadWFXFile(char const* path) {
-	mol::WFX::loadFile(path);
+	mol::FileReader::readFile(path);
+	mol::WFX::loadFile();
 }
 
 DLLEXPORT void pyLoadXYZFile(char const* path) {
-	mol::Renderer::setMolecule(mol::readXYZ(flo::readFile(path)));
+	mol::FileReader::readFile(path);
+	mol::XYZ::loadFile();
 }
 
 DLLEXPORT void pyLoadCubeFile(char const* path) {
-	mol::Cub::readFile(path);
+	mol::FileReader::readFile(path);
+	mol::Cub::readFile();
 }
 
 DLLEXPORT void pyGetAtom(int id, int& Z, float& x, float& y, float& z) {

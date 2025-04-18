@@ -126,7 +126,7 @@ namespace fgr {
 		///<param name="height">The height of the rectangle.</param>
 		///<param name="data">A pointer to be assigned the raw image data. Its length is calculated as width*height*bytes_per_pixel.</param>
 		///<param name="format">The format to be retrieved.</param>
-		///<returns>The success, true being a failure and false a success.</returns>
+		///<returns>The success, false being a failure and true a success.</returns>
 		bool readRect(int x, int y, int width, int height, int format, u8* data);
 
 		///<summary>
@@ -264,7 +264,7 @@ namespace fgr {
 		///<param name="height">The height of the rectangle.</param>
 		///<param name="layer">The affected layer.</param>
 		///<param name="data">A pointer to be assigned the raw image data. Its length is calculated as width*height*bytes_per_pixel.</param>
-		///<returns>The success, true being a failure and false a success.</returns>
+		///<returns>The success, false being a failure and true a success.</returns>
 		bool readRect(int x, int y, int width, int height, int layer, u8* data);
 
 		///<summary>

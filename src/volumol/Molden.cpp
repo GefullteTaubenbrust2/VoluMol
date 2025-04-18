@@ -2,7 +2,6 @@
 
 #include <iostream>
 
-#include "../logic/TextReading.h"
 #include "MolRenderer.h"
 #include "Orbital.h"
 #include "TextUtil.h"
@@ -14,9 +13,8 @@ namespace mol {
 }
 
 namespace mol::Molden {
-	std::vector<std::string> file;
-	uint line = 0;
-	uint column = 0;
+	using namespace FileReader;
+
 	bool atomic_units = false;
 	std::map<uint, glm::dvec3> atom_positions;
 	bool spherical_d = false;
@@ -26,8 +24,6 @@ namespace mol::Molden {
 	uint entry = 0;
 	Molecule molecule;
 	bool use_stos = false;
-
-	std::string l;
 
 	enum class Section {
 		search = 0,
@@ -39,74 +35,62 @@ namespace mol::Molden {
 
 	Section section = Section::search;
 
-	void skipWhiteSpace() {
-		skipWhitespace(l, column);
-	}
-
-	void throwError(const std::string& message) {
-		error = true;
-		std::cerr << "Error occured reading Molden file: \n" << message << "\nIn line: " << line << "\nOffending content:\n";
-		for (int i = line - 2; i <= line + 2; ++i) {
-			if (i < 0) i = 0;
-			if (i >= file.size()) break;
-			std::cerr << file[i];
-			if (i == line) std::cerr << " <<< ERROR";
-			std::cerr << '\n';
-		}
-	}
-
 	bool handleFlag(const std::string& l) {
-		if (safeGetChar(l, column) != '[') return false;
-		if (findKeyword(l, "[5D]", column)) {
+		if (safeGetChar(getLine(), offset) != '[') return false;
+		bool found = false;
+		if (findKeyword("[5D]")) {
 			spherical_d = true;
 			spherical_f = true;
-			return true;
+			found = true;
 		}
-		else if (findKeyword(l, "[7F]", column)) {
+		else if (findKeyword("[7F]")) {
 			spherical_d = false;
 			spherical_f = true;
-			return true;
+			found = true;
 		}
-		else if (findKeyword(l, "[9G]", column)) {
+		else if (findKeyword("[9G]")) {
 			spherical_g = true;
-			return true;
+			found = true;
 		}
-		else if (findKeyword(l, "[5D10F]", column)) {
+		else if (findKeyword("[5D10F]")) {
 			spherical_d = true;
 			spherical_f = false;
-			return true;
+			found = true;
 		}
-		else if (findKeyword(l, "[5D7F]", column)) {
+		else if (findKeyword("[5D7F]")) {
 			spherical_d = true;
 			spherical_f = true;
-			return true;
+			found = true;
 		}
-		return false;
+		if (found) {
+			ignoreLine();
+			previousLine();
+		}
+		return found;
 	}
 
 	bool handleKeywords(const std::string& l) {
-		if (safeGetChar(l, column) != '[') return false;
-		if (findKeyword(l, "[Atoms]", column)) {
+		if (safeGetChar(getLine(), offset) != '[') return false;
+		if (findKeyword("[Atoms]")) {
 			section = Section::atoms;
-			column += 7;
-			skipWhiteSpace();
-			if (findKeyword(l, "AU", column)) atomic_units = true;
+			skipWhitespace();
+			if (findKeyword("AU")) atomic_units = true;
 			entry = 0;
 			return true;
 		}
-		else if (findKeyword(l, "[GTO]", column)) {
+		else if (findKeyword("[GTO]")) {
 			section = Section::gto;
 			use_stos = false;
 			entry = 0;
 			return true;
 		}
-		else if (findKeyword(l, "[STO]", column)) {
+		else if (findKeyword("[STO]")) {
 			section = Section::sto;
 			use_stos = true;
 			entry = 0;
 			return true;
 		}
-		else if (findKeyword(l, "[MO]", column)) {
+		else if (findKeyword("[MO]")) {
 			section = Section::mo;
 			entry = 0;
 			return true;
@@ -114,17 +98,15 @@ namespace mol::Molden {
 		return false;
 	}
 
-	void nextLine(bool expect = false) {
+	void handleNextLine(bool expect = false) {
 		do {
-			++line;
-			column = 0;
-			if (line >= file.size()) {
+			nextLine();
+			if (getLineNumber() >= getLineCount()) {
 				if (expect) throwError("Expected additional lines");
 				return;
 			}
-			l = file[line];
-			skipWhiteSpace();
-		} while (handleKeywords(l));
+			skipWhitespace();
+		} while (handleKeywords(getLine()));
 	}
 
 	void addGTO(const std::vector<glm::dvec2>& contractions, int l, int m, glm::dvec3 position) {
@@ -231,15 +213,7 @@ namespace mol::Molden {
 		}
 	}
 
-	void loadFile(const std::string& path) {
-		file = flo::readFile(path);
-		if (!file.size()) {
-			std::cout << "File not found for empty\n";
-			return;
-		}
-
-		line = 0;
-		column = 0;
+	void loadFile() {
 		atomic_units = false;
 		spherical_d = false;
 		spherical_f = false;
@@ -250,28 +224,27 @@ namespace mol::Molden {
 		molecule.atoms.clear();
 		atom_positions.clear();
 
-		for (; line < file.size(); nextLine()) {
-			handleFlag(l);
+		for (; !endOfFile(); nextLine()) {
+			handleFlag(getLine());
 		}
 
-		line = 0;
-		column = 0;
+		setLineNumber(0);
 
-		for (; line < file.size(); nextLine()) {
+		for (; !endOfFile(); handleNextLine()) {
 			switch (section) {
 			case(Section::atoms): {
-				std::string element = readText(l, column);
-				skipWhiteSpace();
-				int id = readInt(l, column, error);
-				skipWhiteSpace();
-				int Z = readInt(l, column, error);
-				skipWhiteSpace();
+				std::string element = readText();
+				skipWhitespace();
+				int id = readInt(error);
+				skipWhitespace();
+				int Z = readInt(error);
+				skipWhitespace();
 				glm::dvec3 position;
-				position.x = readFloat(l, column, error);
-				skipWhiteSpace();
-				position.y = readFloat(l, column, error);
-				skipWhiteSpace();
-				position.z = readFloat(l, column, error);
+				position.x = readFloat(error);
+				skipWhitespace();
+				position.y = readFloat(error);
+				skipWhitespace();
+				position.z = readFloat(error);
 				if (error) {
 					throwError("Illegal formatting of atom definition");
 					return;
@@ -283,7 +256,7 @@ namespace mol::Molden {
 				break;
 			}
 			case(Section::gto): {
-				uint atom = readInt(l, column, error);
+				uint atom = readInt(error);
 				if (error) {
 					throwError("Incorrectly formatted number (GTO atom number)");
 					return;
@@ -297,10 +270,10 @@ namespace mol::Molden {
 
 				glm::dvec3 position = iter->second;
 
-				for (nextLine(); line < file.size(); nextLine()) {
-					if (column >= l.size()) break;
+				for (handleNextLine(); !endOfFile(); handleNextLine()) {
+					if (offset >= getLine().size()) break;
 
-					char label = l[column];
+					char label = getLine()[offset];
 
 					uint shell = 0;
 					if (label == 'p') shell = 1;
@@ -308,52 +281,52 @@ namespace mol::Molden {
 					if (label == 'f') shell = 3;
 					if (label == 'g') shell = 4;
 
-					++column;
+					++offset;
 
-					skipWhiteSpace();
+					skipWhitespace();
 
-					int primitive_count = readInt(l, column, error);
+					int primitive_count = readInt(error);
 					if (error) {
 						throwError("Incorrectly formatted number (primitive count)");
 						return;
 					}
 
-					uint last_line = line + primitive_count;
-					if (last_line >= file.size()) {
+					uint last_line = getLineNumber() + primitive_count;
+					if (last_line >= getLineCount()) {
 						throwError("GTO definition contains less primitives than specified");
 						return;
 					}
 
 					std::vector<glm::dvec2> contractions;
-					for (nextLine(); line ; nextLine()) {
-						double alpha = readFloat(l, column, error) / (a0_A * a0_A);
-						skipWhiteSpace();
-						double c = readFloat(l, column, error);
+					for (handleNextLine(); !endOfFile(); handleNextLine()) {
+						double alpha = readFloat(error) / (a0_A * a0_A);
+						skipWhitespace();
+						double c = readFloat(error);
 						if (error) {
 							throwError("Incorrectly formatted number (contraction parameters)");
 							return;
 						}
 						contractions.push_back(glm::dvec2(alpha, c));
-						if (line >= last_line) break;
+						if (getLineNumber() >= last_line) break;
 					}
 					addGTO(contractions, shell, position);
 				}
 				break;
 			}
 			case(Section::sto): {
-				int id = readInt(l, column, error);
-				skipWhiteSpace();
-				int kx = readInt(l, column, error);
-				skipWhiteSpace();
-				int ky = readInt(l, column, error);
-				skipWhiteSpace();
-				int kz = readInt(l, column, error);
-				skipWhiteSpace();
-				int kr = readInt(l, column, error);
-				skipWhiteSpace();
-				double alpha = readFloat(l, column, error);
-				skipWhiteSpace();
-				double coeff = readFloat(l, column, error);
+				int id = readInt(error);
+				skipWhitespace();
+				int kx = readInt(error);
+				skipWhitespace();
+				int ky = readInt(error);
+				skipWhitespace();
+				int kz = readInt(error);
+				skipWhitespace();
+				int kr = readInt(error);
+				skipWhitespace();
+				double alpha = readFloat(error);
+				skipWhitespace();
+				double coeff = readFloat(error);
 				if (error) {
 					throwError("Illegal formatting of STO definition");
 				}
@@ -372,11 +345,11 @@ namespace mol::Molden {
 				break;
 			}
 			case(Section::mo): {
-				if (column >= l.size()) {
+				if (offset >= getLine().size()) {
 					section = Section::search;
 					break;
 				}
-				if (line + 4 >= file.size()) {
+				if (getLineNumber() + 4 >= getLineCount()) {
 					throwError("Expected additional data for MO");
 					return;
 				}
@@ -387,68 +360,64 @@ namespace mol::Molden {
 				mo.basis = &basis_set;
 				mo.use_stos = use_stos;
 
-				if (!findKeyword(l, "Sym=", column)) {
+				if (!findKeyword("Sym=")) {
 					throwError("Expected 'Sym' keyword");
 					return;
 				}
-				column += 4;
-				skipWhiteSpace();
-				mo.name = readText(l, column);
+				skipWhitespace();
+				mo.name = readText();
 				
-				nextLine();
+				handleNextLine();
 
-				if (!findKeyword(l, "Ene=", column)) {
+				if (!findKeyword("Ene=")) {
 					throwError("Expected 'Ene' keyword");
 					return;
 				}
-				column += 4;
-				skipWhiteSpace();
-				mo.energy = readFloat(l, column, error);
+				skipWhitespace();
+				mo.energy = readFloat(error);
 				if (error) {
 					throwError("Incorrectly formatted number (MO Ene)");
 					return;
 				}
 
-				nextLine();
+				handleNextLine();
 
-				if (!findKeyword(l, "Spin=", column)) {
+				if (!findKeyword("Spin=")) {
 					throwError("Expected 'Spin' keyword");
 					return;
 				}
-				column += 5;
-				skipWhiteSpace();
-				std::string spin = readText(l, column);
+				skipWhitespace();
+				std::string spin = readText();
 				if (spin != "Alpha" && spin != "Beta") {
 					throwError("Expected 'Spin' to be 'Alpha' or 'Beta'");
 					return;
 				}
 				mo.spin = spin[0] == 'A' ? Spin::alpha : Spin::beta;
 
-				nextLine();
+				handleNextLine();
 
-				if (!findKeyword(l, "Occup=", column)) {
+				if (!findKeyword("Occup=")) {
 					throwError("Expected 'Occup' keyword");
 					return;
 				}
-				column += 6;
-				skipWhiteSpace();
-				mo.occupation = readFloat(l, column, error);
+				skipWhitespace();
+				mo.occupation = readFloat(error);
 				if (error) {
 					throwError("Incorrectly formatted number (MO Occup)");
 					return;
 				}
 				
-				nextLine();
+				handleNextLine();
 
-				while (line < file.size()) {
-					if (!isDigit(safeGetChar(l, column))) {
-						--line;
+				while (!endOfFile()) {
+					if (!isDigit(safeGetChar(getLine(), offset))) {
+						setLineNumber(getLineNumber() - 1);
 						break;
 					}
 					
-					uint ao_index = readInt(l, column, error) - 1;
-					skipWhiteSpace();
-					double lcao_coefficient = readFloat(l, column, error);
+					uint ao_index = readInt(error) - 1;
+					skipWhitespace();
+					double lcao_coefficient = readFloat(error);
 					if (error) {
 						throwError("Incorrectly formatted number MO (LCAO coefficient)");
 						return;
@@ -459,7 +428,7 @@ namespace mol::Molden {
 					}
 					mo.lcao_coefficients[ao_index] = lcao_coefficient;
 
-					nextLine();
+					handleNextLine();
 				}
 				break;
 			}

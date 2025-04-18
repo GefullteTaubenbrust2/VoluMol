@@ -1,34 +1,36 @@
 #include "XYZReader.h"
 #include "TextUtil.h"
+#include "Molecule.h"
+#include "MolRenderer.h"
 
-namespace mol {
-	Molecule readXYZ(const std::vector<std::string>& file) {
+namespace mol::XYZ {
+	using namespace FileReader;
+
+	void loadFile() {
 		Molecule molecule;
 		
-		if (file.size() < 3) return molecule;
+		if (getLineCount() < 3) return;
 
 		uint offset = 0;
 
-		for (; offset < file[0].size(); ++offset) if (!isWhiteSpace(file[0][offset])) break;
+		skipWhitespace();
 
 		bool error = false;
-		uint number_atoms = readInt(file[0], offset, error);
+		uint number_atoms = readInt(error);
 
-		if (error) return molecule;
+		if (error) {
+			throwError("Could not read number of atoms");
+			return;
+		}
 
 		uint real_number_atoms = 0;
 
-		for (int l = 2; l < file.size(); ++l) {
-			std::string line = file[l];
-			offset = 0;
+		for (setLineNumber(2); !endOfFile(); nextLine()) {
+			skipWhitespace();
 
-			if (line.size() < 1) continue;
+			if (endOfLine()) continue;
 
-			for (; offset < line.size(); ++offset) if (!isWhiteSpace(line[offset])) break;
-
-			if (!isText(line[offset])) break;
-
-			std::string element_name = readText(line, offset);
+			std::string element_name = readText();
 			uint element = ghost_atom;
 
 			for (int i = 0; i < 119; ++i) {
@@ -40,13 +42,18 @@ namespace mol {
 
 			float coordinates[3];
 			for (int i = 0; i < 3; ++i) {
-				for (; offset < line.size(); ++offset) if (!isWhiteSpace(line[offset])) break;
-				coordinates[i] = readFloat(line, offset, error);
-				if (error) return molecule;
+				skipWhitespace();
+				coordinates[i] = readFloat(error);
+				if (error) {
+					throwError("Could not read atomic coordinate");
+					return;
+				}
 			}
 
 			molecule.atoms.push_back(Atom(element, glm::vec3(coordinates[0], coordinates[1], coordinates[2])));
 		}
-		return molecule;
+		
+		Renderer::setMolecule(molecule);
+		return;
 	}
 }

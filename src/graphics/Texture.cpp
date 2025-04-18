@@ -137,7 +137,7 @@ namespace fgr {
 		bindToUnit(fgr::TextureUnit::misc);
 		glReadPixels(x, y, width, height, texture_format, format, data);
 		graphics_check_error();
-		return false;
+		return true;
 	}
 
 	void TextureHandle::setRect(int x, int y, int width, int height, u8* data) {
@@ -357,14 +357,14 @@ namespace fgr {
 	}
 
 	bool ArrayTexture::readRect(int x, int y, int width, int height, int layer, u8* data) {
-		if (x < 0 || y < 0 || x + width >= ArrayTexture::width || y + height >= ArrayTexture::height || layer < 0 || layer >= layer_count) return true;
+		if (x < 0 || y < 0 || x + width >= ArrayTexture::width || y + height >= ArrayTexture::height || layer < 0 || layer >= layer_count) return false;
 		for (int yp = y; yp < y + height; ++yp) {
 			std::copy(
 				ArrayTexture::data.getPtr() + (layer * ArrayTexture::width * ArrayTexture::height + x + yp * ArrayTexture::width) * 4,
 				ArrayTexture::data.getPtr() + (layer * ArrayTexture::width * ArrayTexture::height + x + width + yp * ArrayTexture::width) * 4,
 				data + width * (yp - y) * 4);
 		}
-		return false;
+		return true;
 	}
 
 	void ArrayTexture::setRect(int x, int y, int width, int height, int layer, u8* data) {
