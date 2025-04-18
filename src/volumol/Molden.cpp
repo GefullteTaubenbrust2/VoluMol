@@ -43,8 +43,7 @@ namespace mol::Molden {
 			spherical_f = true;
 			found = true;
 		}
-		else if (findKeyword("[7F]")) {
-			spherical_d = false;
+		else if (findKeyword(l, "[7F]", column)) {
 			spherical_f = true;
 			found = true;
 		}
