@@ -43,7 +43,7 @@ namespace fgr {
 
 			if (fbo) {
 				glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-				glFramebufferTexture(GL_FRAMEBUFFER, GL_TEXTURE_3D, id, 0);
+				glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, id, 0);
 				glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			}
 
