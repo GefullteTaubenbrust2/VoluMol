@@ -167,12 +167,13 @@ namespace mol::Renderer {
 			post_shader.compile(definitions);
 		}
 
+		orientCamera(camera_position, camera_direction);
+
 		settings = _settings;
 		glm::vec3 sun_position = glm::mat3(model_matrix) * settings.sun_position;
 		mesh_shader.setVec3(3, glm::normalize(sun_position));
 		mesh_shader.setVec3(4, glm::pow(settings.sun_color, glm::vec3(2.2)));
 		mesh_shader.setVec3(5, glm::pow(settings.ambient_color, glm::vec3(2.2)));
-		mesh_shader.setVec3(11, glm::vec3(glm::mat3(model_matrix) * camera_direction));
 		volumetric_shader.setVec3(7, glm::normalize(sun_position));
 		volumetric_shader.setVec3(8, glm::pow(settings.sun_color, glm::vec3(2.2)));
 		volumetric_shader.setVec3(9, glm::pow(settings.ambient_color, glm::vec3(2.2)));
@@ -221,9 +222,7 @@ namespace mol::Renderer {
 		for (Atom a : molecule.atoms) {
 			molecule_positions.push_back(a.position);
 		}
-		model_matrix = glm::mat4(1.0);
-		glm::vec3 sun_position = settings.sun_position;
-		csm.fitScene(molecule_positions, sun_position, 4.f);
+		setTransform(glm::mat4(1.0));
 		use_volumetric = false;
 		update_molecule = true;
 	}
@@ -311,7 +310,7 @@ namespace mol::Renderer {
 		camera_position = position;
 		camera_direction = direction;
 		mesh_shader.setVec3(6, p);
-		mesh_shader.setVec3(11, glm::vec3(glm::mat3(model_matrix) * camera_direction));
+		mesh_shader.setVec3(11, d);
 		volumetric_shader.setVec3(2, p);
 		volumetric_shader.setVec3(23, d);
 	}
