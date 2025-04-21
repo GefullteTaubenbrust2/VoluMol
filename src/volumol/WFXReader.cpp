@@ -16,6 +16,7 @@ namespace mol::WFX {
 	using namespace FileReader;
 
 	std::string cur_keyword;
+	bool terminate_next = false;
 	Molecule molecule;
 
 	void seekKeyWord(const std::string& keyword, uint from_line = 0) {
@@ -28,11 +29,22 @@ namespace mol::WFX {
 		}
 	}
 
+	bool terminates() {
+		if (findKeyword(cur_keyword)) {
+			terminate_next = true;
+			return true;
+		}
+		return false;
+	}
+
 	bool nextTerminates() {
+		if (terminate_next) {
+			terminate_next = false;
+			return true;
+		}
 		nextLine();
 		skipWhitespace();
-		if (findKeyword(cur_keyword)) return true;
-		return false;
+		return findKeyword(cur_keyword);
 	}
 
 	constexpr glm::ivec3 gto_exponents[56] = {
@@ -81,7 +93,7 @@ namespace mol::WFX {
 		}
 		uint index = 0;
 		while (!nextTerminates()) {
-			while (!endOfLine()) {
+			while (!terminates() && !endOfLine()) {
 				bool error = false;
 				int number = readInt(error);
 				if (error || number < 1 || number > basis_set.size()) {
@@ -102,7 +114,7 @@ namespace mol::WFX {
 		}
 		index = 0;
 		while (!nextTerminates()) {
-			while (!endOfLine()) {
+			while (!terminates() && !endOfLine()) {
 				bool error = false;
 				int number = readInt(error);
 				if (error || number < 1 || number > 56) {
@@ -125,7 +137,7 @@ namespace mol::WFX {
 		}
 		index = 0;
 		while (!nextTerminates()) {
-			while (!endOfLine()) {
+			while (!terminates() && !endOfLine()) {
 				bool error = false;
 				double number = readFloat(error);
 				if (error) {
@@ -155,7 +167,7 @@ namespace mol::WFX {
 		}
 		index = 0;
 		while (!nextTerminates()) {
-			while (!endOfLine()) {
+			while (!terminates() && !endOfLine()) {
 				bool error = false;
 				double number = readFloat(error);
 				if (error) {
@@ -176,7 +188,7 @@ namespace mol::WFX {
 		}
 		index = 0;
 		while (!nextTerminates()) {
-			while (!endOfLine()) {
+			while (!terminates() && !endOfLine()) {
 				bool error = false;
 				double number = readFloat(error);
 				if (error) {
@@ -197,7 +209,7 @@ namespace mol::WFX {
 		}
 		index = 0;
 		while (!nextTerminates()) {
-			while (!endOfLine()) {
+			while (!terminates() && !endOfLine()) {
 				Spin spin = Spin::alpha;
 
 				if (findKeyword("Alpha and Beta")) spin = Spin::alpha;
@@ -315,7 +327,7 @@ namespace mol::WFX {
 		}
 		uint index = 0;
 		while (!nextTerminates()) {
-			while (!endOfLine()) {
+			while (!terminates() && !endOfLine()) {
 				bool error = false;
 				double number = readFloat(error);
 				if (error) {
