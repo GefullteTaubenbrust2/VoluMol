@@ -35,7 +35,7 @@ namespace flo {
 		if (p < 0) p = 0;
 		int q = setpoint * progress_bar_width;
 		if (q < 0) q = 0;
-		char bar[progress_bar_width];
+		char bar[progress_bar_width + 1];
 		for (int i = 0; i < q && i < progress_bar_width; ++i) {
 			bar[i] = '#';
 		}
@@ -44,7 +44,8 @@ namespace flo {
 		}
 		for (int i = p; i < progress_bar_width; ++i) {
 			bar[i] = '-';
-		} 
+		}
+		bar[progress_bar_width] = '\0';
 		std::cout << "0% " << bar << " 100%" << '\r' << std::flush;
 	}
 }
