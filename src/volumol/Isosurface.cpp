@@ -1,5 +1,7 @@
 #include "Isosurface.h"
 
+#include "../logic/ConsoleUtils.h"
+
 namespace mol {
 	extern const char tri_table[256][16];
 
@@ -16,7 +18,10 @@ namespace mol {
 		flo::Array<int> index_buffer(3 * width * height * depth);
 		for (int i = 0; i < 3 * width * height * depth; ++i) index_buffer[i] = -1;
 
+		std::cout << "Rendering MO isosurface\nProgress:\n";
+
 		for (uint z = 0; z < depth - 1; ++z) {
+			if (z % (depth / 40) == 0) flo::printProgress((float)z / (float)(depth - 1));
 			for (uint y = 0; y < height - 1; ++y) {
 				for (uint x = 0; x < width - 1; ++x) {
 					float values[8] = {
@@ -146,6 +151,8 @@ namespace mol {
 				}
 			}
 		}
+
+		std::cout << '\n';
 
 		//mesh.generateNormals();
 

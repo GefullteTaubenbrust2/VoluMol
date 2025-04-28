@@ -1,6 +1,7 @@
 #include "Orbital.h"
 
 #include "../logic/MathUtil.h"
+#include "../logic/ConsoleUtils.h"
 #include "../graphics/FrameBuffer.h"
 #include "../graphics/Renderstate.h"
 #include "../graphics/ComputeShader.h"
@@ -282,7 +283,7 @@ namespace mol {
 
 		int ao_count = glm::min(lcao_coefficients.size(), basis->size());
 		for (int i = 0; i < ao_count; ++i) {
-			if (print_progress) std::cout << "Cubemap: AO " << (i + 1) << "/" << ao_count << '\n';
+			if (print_progress) flo::printProgress((float)(i + 1) / (float)(ao_count));
 
 			ContractedBasis& b = (*basis)[i];
 			double coeff = lcao_coefficients[i];
@@ -492,9 +493,9 @@ namespace mol {
 
 			if (print_progress) {
 #if USE_COMPUTE_SHADERS
-				std::cout << "Using compute shaders for rendering\n";
+				std::cout << "Using compute shaders for rendering\nProgress:\n";
 #else
-				std::cout << "Using geometry shaders for rendering\n";
+				std::cout << "Using geometry shaders for rendering\nProgress\n";
 #endif
 			}
 
@@ -538,7 +539,7 @@ namespace mol {
 
 							setSTOUniforms(origins, exponents4, alpha, coeffs, primitive_count);
 
-							if (print_progress) std::cout << "Cubemap: AO " << (i + 1) << "/" << ao_count << '\n';
+							if (print_progress) flo::printProgress((float)(i + 1) / (float)(ao_count));
 
 							drawSlicesToFBO(vas, fbo, sto_shader, sto_compute, map);
 
@@ -577,7 +578,7 @@ namespace mol {
 
 							setGTOUniforms(origins, exponents3, alpha, coeffs, primitive_count);
 
-							if (print_progress) std::cout << "Cubemap: AO " << (i + 1) << "/" << ao_count << '\n';
+							if (print_progress) flo::printProgress((float)(i + 1) / (float)(ao_count));
 
 							drawSlicesToFBO(vas, fbo, gto_shader, gto_compute, map);
 
@@ -603,8 +604,14 @@ namespace mol {
 			fgr::setBlending(fgr::Blending::linear);
 
 			map.texture.loadFromID(map.texture.id);
+			
+			if (print_progress) std::cout << '\n';
 		}
 		else {
+			const uint thread_count = settings.cubemap_slice_count;
+
+			if (print_progress) std::cout << "Using " << thread_count << " CPU thread(s) for rendering\nProgress:\n";
+
 			for (int z = 0; z < dimensions.z; ++z) {
 				for (int y = 0; y < dimensions.y; ++y) {
 					for (int x = 0; x < dimensions.x; ++x) {
@@ -616,8 +623,6 @@ namespace mol {
 				}
 			}
 
-			const uint thread_count = settings.cubemap_slice_count;
-
 			std::vector<std::unique_ptr<std::thread>> threads(thread_count - 1);
 
 			for (int i = 0; i < thread_count - 1; ++i) {
@@ -628,11 +633,11 @@ namespace mol {
 
 			writeCubeSlice(map, map.texture.depth * (thread_count - 1) / thread_count, map.texture.depth, true);
 
-			std::cout << "Thread 1 finished\n";
+			if (print_progress) std::cout << "\nThread 1 finished\n";
 
 			for (int i = 0; i < thread_count - 1; ++i) {
 				threads[i]->join();
-				std::cout << "Thread " << i + 2 << " finished\n";
+				if (print_progress) std::cout << "Thread " << i + 2 << " finished\n";
 			}
 
 			if (!map.texture.id) {
@@ -695,12 +700,24 @@ namespace mol {
 			fbo = cubemap.texture.createFrameBuffer();
 			fbo.clear(glm::vec4(0.), false);
 		}
+		else std::cout << "Using " << settings.cubemap_slice_count << " CPU thread(s) for rendering\n";
 
+		std::cout << "Progress:\n";
+
+		uint occupied_count = 0;
 		for (MolecularOrbital& mo : mos) {
 			if (mo.occupation < 0.001 && mo.occupation > -0.001) continue;
+			++occupied_count;
+		}
+
+		uint current_progress = 0;
+		for (MolecularOrbital& mo : mos) {
+			if (mo.occupation < 0.001 && mo.occupation > -0.001) continue;
+			++current_progress;
+
 			float occuption = mo.occupation;
 
-			std::cout << "Rendering MO " << mo.name << '\n';
+			flo::printProgress((float)current_progress / (float)occupied_count);
 
 			mo.writeCubeMap(psi_map, false);
 
@@ -728,6 +745,7 @@ namespace mol {
 				fgr::setBlending(fgr::Blending::linear);
 			}
 			else {
+				flo::setConsoleProgress((float)current_progress / (float)occupied_count);
 				for (int i = 0; i < size; ++i) {
 					float& psi = psi_map.texture.data[4 * i];
 					cubemap.texture.data[4 * i] += occuption * psi * psi;
@@ -740,6 +758,8 @@ namespace mol {
 		else {
 			cubemap.texture.syncTexture();
 		}
+		flo::setConsoleProgress(0.f);
+		std::cout << '\n';
 	}
 
 	uint findHOMO(Spin spin) {
