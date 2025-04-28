@@ -2,9 +2,8 @@
 #include <glm/glm.hpp>
 #ifdef _WIN32
 #include <Windows.h>
-#elif linux
-#include <iostream>
 #endif
+#include <iostream>
 
 namespace flo {
 	void setConsoleColor(int text_color, int background_color) {
