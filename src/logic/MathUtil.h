@@ -1,5 +1,4 @@
 #pragma once
-#include <iostream>
 #include <glm/glm.hpp>
 
 #define PI 3.141592653589793238460

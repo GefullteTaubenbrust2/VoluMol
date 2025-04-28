@@ -1,7 +1,8 @@
 #include "VertexArray.h"
 
-#include "Window.h"
+#include <iostream>
 
+#include "Window.h"
 #include "GErrorHandler.h"
 
 namespace fgr {

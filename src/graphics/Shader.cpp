@@ -1,7 +1,8 @@
 #include "Shader.h"
 
-#include "GErrorHandler.h"
+#include <iostream>
 
+#include "GErrorHandler.h"
 #include "Window.h"
 
 #include "../logic/TextReading.h"

@@ -1,5 +1,5 @@
 #pragma once
-
+#include <string>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -8,8 +8,6 @@
 #include <GLFW/glfw3.h>
 
 #include "../logic/Matrices.h"
-
-#include <iostream>
 
 #include <vector>
 
