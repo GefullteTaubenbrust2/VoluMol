@@ -197,7 +197,7 @@ Render a cubemap for the MO with index `orbital`.
 
 
 ### `densityCubemap()`
-Render a cubemao for the electron density. This is a very expensive operation.
+Render a cubemap for the electron density. This is a very expensive operation.
 
 
 ### `setIsosurface()`
