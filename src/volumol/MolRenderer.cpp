@@ -295,10 +295,14 @@ namespace mol::Renderer {
 			glm::vec4(a0.position, 1.f)
 		));
 
+		glm::vec3 b01 = glm::normalize(dir01);
+		glm::vec3 b02 = glm::normalize(dir02);
+		b02 = glm::normalize(b02 - b01 * glm::dot(b01, b02));
+
 		return glm::mat4(
-			glm::vec4(dir01, 0.f),
-			glm::vec4(dir02, 0.f),
-			glm::vec4(glm::normalize(glm::cross(dir01, dir02)), 0.f),
+			glm::vec4(b01, 0.f),
+			glm::vec4(b02, 0.f),
+			glm::vec4(glm::cross(b01, b02), 0.f),
 			glm::vec4(position0, 1.f)
 		) * intermediate_space;
 	}
