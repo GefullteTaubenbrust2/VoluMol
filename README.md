@@ -68,6 +68,7 @@ Controls the functions of the program. Some settings take effect at all times, o
 |`z_near`|`float`| Camera near clipping plane. Small values mean you can get closer to objects before they clip, but also decrease depth resolution. |`0.3`|
 |`z_far`|`float`| Camera far clipping plane. This essentially controls how far you can see, but very large values decrease depth resolution. |`300.`|
 |`volumetric_gradient`|`float`| Effective only if `volumetric_color_mode = True` and controls the color gradient. Higher values mean the color changes more strongly with increasing function values.|`1.`|
+|`clear_alpha`|`float`| Controls the transparency of the background. It is recommended to use 0 for transparent backgrounds, in which ideally a black `clear_color` is used or 1 for opaque backgrounds.|`1.`|
 |`ambient_color`|`tuple`| RGB values for ambient light color. Higher values mean shadows will be weaker. |`(0.4, 0.4, 0.4)`|
 |`sun_color`|`tuple`| RGB values of the sun's color. Values can exceed `1.` due to tone mapping. |`(2., 2., 2.)`|
 |`sun_position`|`tuple`| Vector describing the position of the sun in the "sky". Need not be normalized. |`(2., 1., 1.)`|
