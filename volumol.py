@@ -62,6 +62,7 @@ class Settings:
     z_near = 0.3
     z_far = 300.
     volumetric_gradient = 1.
+    clear_alpha = 1.0
 
     ambient_color = (0.4, 0.4, 0.4)
     sun_color = (2., 2., 2.)
@@ -212,7 +213,7 @@ def removeBond(a,b):
     __library.pyRemoveBond(a,b)
 
 def updateSettings(settings):
-    floats = (ctypes.c_float * 20)(
+    floats = (ctypes.c_float * 21)(
         settings.size_factor, 
         settings.bond_thickness, 
         settings.bond_length_tolerance,
@@ -232,7 +233,8 @@ def updateSettings(settings):
         settings.brightness,
         settings.z_near,
         settings.z_far,
-        settings.volumetric_gradient
+        settings.volumetric_gradient,
+        settings.clear_alpha
     )
 
     vec3s = compressVec3(

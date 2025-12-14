@@ -193,7 +193,7 @@ namespace mol::Renderer {
 		merge_shader.setFloat(3, settings.ao_intensity);
 		merge_shader.setFloat(4, settings.ao_exponent);
 		merge_shader.setFloat(5, settings.outline_radius);
-		post_shader.setVec3(1, settings.clear_color);
+		post_shader.setVec4(1, settings.clear_color);
 		post_shader.setFloat(3, settings.brightness);
 		outline_shader.setFloat(1, settings.z_near);
 		outline_shader.setFloat(2, settings.z_far);

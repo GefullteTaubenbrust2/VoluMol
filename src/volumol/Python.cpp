@@ -195,13 +195,14 @@ DLLEXPORT void pyUpdateSettings(float* floats, float* vectors, int* ints, bool* 
 	settings.z_near							= floats[17];
 	settings.z_far							= floats[18];
 	settings.volumetric_gradient			= floats[19];
+	settings.clear_color.a					= floats[20];
 
 	settings.ambient_color					= vec3FromFloats(vectors, 0);
 	settings.sun_color						= vec3FromFloats(vectors, 1);
 	settings.sun_position					= vec3FromFloats(vectors, 2);
 	settings.mo_colors[0]					= vec3FromFloats(vectors, 3);
 	settings.mo_colors[1]					= vec3FromFloats(vectors, 4);
-	settings.clear_color					= vec3FromFloats(vectors, 5);
+	settings.clear_color					= glm::vec4(vec3FromFloats(vectors, 5), settings.clear_color.a);
 
 	settings.sphere_subdivisions			= ints[0];
 	settings.cylinder_resolution			= ints[1];

@@ -6,7 +6,7 @@ in vec2 texCoord;
 
 uniform sampler2D texture;
 
-uniform vec3 clear_color;
+uniform vec4 clear_color;
 
 uniform float taa_alpha;
 
@@ -42,12 +42,14 @@ void main() {
 	col = min(pow(col, vec3(1.0 / 2.2)) * brightness, 1.0);
 
 #if defined(EMISSIVE_VOLUME) || !defined(PREMULTIPLY_COLOR)
-	col = col + clear_color * (1.0 - s.a);
+	col = col + clear_color.rgb * (1.0 - s.a);
 #else
-	col = col * s.a + clear_color * (1.0 - s.a);
+	col = col * s.a + clear_color.rgb * (1.0 - s.a);
 #endif
 
 	col += screen_space_dither(gl_FragCoord.xy);
 
-	gl_FragColor = vec4(col * taa_alpha, taa_alpha);
+	float alpha = taa_alpha * max(clear_color.a, s.a);
+
+	gl_FragColor = vec4(col * taa_alpha, alpha);
 }
