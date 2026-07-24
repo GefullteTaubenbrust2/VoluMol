@@ -251,8 +251,8 @@ namespace mol::Renderer {
 		if (a < 0 || a >= molecule.atoms.size() || b < 0 || b >= molecule.atoms.size() || a == b) return;
 		for (int i = 0; i < molecule.bonds.size(); ++i) {
 			if ((molecule.bonds[i].x == a && molecule.bonds[i].y == b) || (molecule.bonds[i].x == b && molecule.bonds[i].y == a)) {
-				molecule.bonds.erase(molecule.bonds.begin() + i);
-				--i;
+				molecule.bonds[i].z = order;
+				return;
 			}
 		}
 		molecule.bonds.push_back(glm::ivec3(a, b, order));
