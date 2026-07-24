@@ -7,4 +7,6 @@ namespace mol {
 	void generateIsosphere(Mesh& mesh, uint subdivisions);
 
 	void generateCylinder(Mesh& mesh, uint resolution, float thickness, bool hard_cut);
+
+	void generateArrow(Mesh& mesh, uint resolution, float thickness);
 }

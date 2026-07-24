@@ -46,6 +46,8 @@ namespace mol::FileReader {
 
 	std::string readText();
 
+	std::string readContent();
+
 	bool findKeyword(const std::string& keyword);
 
 	void skipWhitespace();

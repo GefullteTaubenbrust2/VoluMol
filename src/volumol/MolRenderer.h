@@ -7,9 +7,13 @@ namespace mol::Renderer {
 
 	void updateSettings(const RenderProperties& settings);
 
-	void setMolecule(const Molecule& molecule);
+	void setMolecule(const Molecule& molecule, bool auto_bonds = true);
 
-	void addBond(uint a, uint b);
+	void setDisplacements(const std::vector<glm::vec3>& displacements);
+
+	void drawNormalMode(uint mode);
+
+	void addBond(uint a, uint b, uint order);
 
 	void removeBond(uint a, uint b);
 

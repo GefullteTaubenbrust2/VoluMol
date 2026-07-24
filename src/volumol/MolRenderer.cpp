@@ -3,6 +3,7 @@
 #include "Constants.h"
 #include "Isosurface.h"
 #include "Settings.h"
+#include "MeshGenerator.h"
 
 #include "../graphics/GErrorHandler.h"
 #include "../graphics/3D/ShadowMap.h"
@@ -15,6 +16,7 @@
 namespace mol {
 	CubeMap cubemap;
 	Molecule molecule;
+	extern flo::Array<float> normal_modes;
 }
 
 namespace mol::Renderer {
@@ -53,7 +55,7 @@ namespace mol::Renderer {
 			"offset",			// 10
 			"camera_dir"		// 11
 		});
-		mesh_shader.compile("#define SHADOWMAP_LEVELS 8\n");
+		mesh_shader.compile("#define SHADOWMAP_LEVELS 8\n#define ENABLE_SHADOWS 1\n");
 
 		geometry_shader = fgr::Shader("shaders/volumol/geometry.vert", "shaders/volumol/geometry.frag", std::vector<std::string>{"model", "view", "projection", "offset"});
 		geometry_shader.compile();
@@ -153,6 +155,7 @@ namespace mol::Renderer {
 		if (_settings.emissive_volume) definitions += "#define EMISSIVE_VOLUME 1\n";
 		if (_settings.premulitply_color) definitions += "#define PREMULTIPLY_COLOR 1\n";
 		if (_settings.volumetric_color_mode) definitions += "#define DENSITY_MODE 1\n";
+		if (_settings.enable_shadows) definitions += "#define ENABLE_SHADOWS 1\n";
 
 		if (
 		_settings.orthographic			!= settings.orthographic			|| 
@@ -210,13 +213,13 @@ namespace mol::Renderer {
 		csm.fitScene(molecule_positions, sun_position, 4.f);
 	}
 
-	void setMolecule(const Molecule& mol) {
+	void setMolecule(const Molecule& mol, bool auto_bonds) {
 		molecule = mol;
 		isosurface_mesh.vertices.clear();
 		isosurface_mesh.indices.clear();
 		isosurface_mesh.update();
 
-		molecule.setBonds();
+		if (auto_bonds) molecule.setBonds();
 		molecule_positions.clear();
 		molecule_positions.reserve(molecule.atoms.size());
 		for (Atom a : molecule.atoms) {
@@ -227,14 +230,29 @@ namespace mol::Renderer {
 		update_molecule = true;
 	}
 
-	void addBond(uint a, uint b) {
+	void setDisplacements(const std::vector<glm::vec3>& displacements) {
+		molecule.setDisplacements(displacements);
+		update_molecule = true;
+	}
+
+	void drawNormalMode(uint mode) {
+		const int n_nuc = 3 * molecule.atoms.size();
+		if (normal_modes.size() < n_nuc * n_nuc) return;
+		std::vector<glm::vec3> data(molecule.atoms.size());
+		for (int i = 0; i < molecule.atoms.size(); ++i) {
+			data[i] = glm::vec3(normal_modes[n_nuc * mode + i * 3], normal_modes[n_nuc * mode + i * 3 + 1], normal_modes[n_nuc * mode + i * 3 + 2]);
+		}
+		setDisplacements(data);
+	}
+
+	void addBond(uint a, uint b, uint order) {
 		a = molecule.getIndex(a);
 		b = molecule.getIndex(b);
 		if (a < 0 || a >= molecule.atoms.size() || b < 0 || b >= molecule.atoms.size() || a == b) return;
 		for (int i = 0; i < molecule.bonds.size(); ++i) {
 			if ((molecule.bonds[i].x == a && molecule.bonds[i].y == b) || (molecule.bonds[i].x == b && molecule.bonds[i].y == a)) return;
 		}
-		molecule.bonds.push_back(glm::ivec2(a, b));
+		molecule.bonds.push_back(glm::ivec3(a, b, order));
 		update_molecule = true;
 	}
 
@@ -336,9 +354,20 @@ namespace mol::Renderer {
 
 		taa_fbo.clear(glm::vec4(0.0));
 
-		csm.clear();
-		csm.drawShadows(molecule_mesh);
-		if (isosurface_mesh.vertices.size()) csm.drawShadows(isosurface_mesh);
+		glm::vec3 sun_vector = settings.sun_position;
+		if (settings.sticky_sun) {
+			sun_vector = (glm::vec4(settings.sun_position, 0.0) * view.view);
+		}
+
+		if (settings.enable_shadows) {
+			if (settings.sticky_sun) {
+				csm.fitScene(molecule_positions, sun_vector, 4.f);
+			}
+
+			csm.clear();
+			csm.drawShadows(molecule_mesh);
+			if (isosurface_mesh.vertices.size()) csm.drawShadows(isosurface_mesh);
+		}
 
 		for (int i = 0; i < taa_jitter_offsets.size(); ++i) {
 			fbo1.clear(glm::vec4(0.0));
@@ -353,6 +382,11 @@ namespace mol::Renderer {
 			mesh_shader.setMat4(1, view.view);
 			mesh_shader.setMat4(2, view.projection);
 			csm.bindUniforms(mesh_shader, 7);
+
+			if (settings.sticky_sun) {
+				mesh_shader.setVec3(3, glm::normalize(sun_vector));
+				volumetric_shader.setVec3(7, glm::normalize(sun_vector));
+			}
 
 			fbo1.bind();
 			//fbo_ms.bind();

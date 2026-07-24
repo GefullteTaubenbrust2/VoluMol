@@ -18,13 +18,16 @@ namespace mol {
 	struct Molecule {
 		std::vector<Atom> atoms;
 		std::vector<uint> index_map;
-		std::vector<glm::ivec2> bonds;
+		std::vector<glm::ivec3> bonds;
+		std::vector<glm::vec3> displacements;
 		
 		Molecule() = default;
 
 		void setBonds();
 
 		void generateMesh(Mesh& mesh) const;
+
+		void setDisplacements(const std::vector<glm::vec3>& displacements);
 
 		uint getIndex(uint id) const;
 

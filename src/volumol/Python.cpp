@@ -4,6 +4,8 @@
 #include "WFXReader.h"
 #include "XYZReader.h"
 #include "CubeReader.h"
+#include "Displacements.h"
+#include "SDFReader.h"
 #include "Orbital.h"
 #include "MolRenderer.h"
 #include "Settings.h"
@@ -78,6 +80,20 @@ DLLEXPORT void pyLoadCubeFile(char const* path) {
 	mol::Cub::readFile();
 }
 
+DLLEXPORT void pyLoadSDFile(char const* path) {
+	mol::FileReader::readFile(path);
+	mol::SDF::loadFile();
+}
+
+DLLEXPORT void pyLoadNormalModes(char const* path) {
+	mol::FileReader::readFile(path);
+	mol::Displacements::loadNormalModes();
+}
+
+DLLEXPORT void pyDrawNormalMode(int mode) {
+	mol::Renderer::drawNormalMode(mode);
+}
+
 DLLEXPORT void pyGetAtom(int id, int& Z, float& x, float& y, float& z) {
 	mol::Atom atom = mol::Renderer::getAtom(id);
 	Z = atom.Z;
@@ -87,7 +103,11 @@ DLLEXPORT void pyGetAtom(int id, int& Z, float& x, float& y, float& z) {
 }
 
 DLLEXPORT void pyAddBond(int atom0, int atom1) {
-	mol::Renderer::addBond(atom0, atom1);
+	mol::Renderer::addBond(atom0, atom1, 1);
+}
+
+DLLEXPORT void pyAddMultipleBond(int atom0, int atom1, int order) {
+	mol::Renderer::addBond(atom0, atom1, order);
 }
 
 DLLEXPORT void pyRemoveBond(int atom0, int atom1) {
@@ -196,6 +216,8 @@ DLLEXPORT void pyUpdateSettings(float* floats, float* vectors, int* ints, bool* 
 	settings.z_far							= floats[18];
 	settings.volumetric_gradient			= floats[19];
 	settings.clear_color.a					= floats[20];
+	settings.arrow_thickness				= floats[21];
+	settings.arrow_length_multiplier		= floats[22];
 
 	settings.ambient_color					= vec3FromFloats(vectors, 0);
 	settings.sun_color						= vec3FromFloats(vectors, 1);
@@ -220,6 +242,11 @@ DLLEXPORT void pyUpdateSettings(float* floats, float* vectors, int* ints, bool* 
 	settings.emissive_volume				= bools[5];
 	settings.volumetric_color_mode			= bools[6];
 	settings.multicenter_coordination		= bools[7];
+	settings.draw_double_arrows				= bools[8];
+	settings.uniform_atom_size				= bools[9];
+	settings.enable_shadows					= bools[10];
+	settings.sticky_sun						= bools[11];
+	settings.black_bonds					= bools[12];
 
 	mol::Renderer::updateSettings(settings);
 }

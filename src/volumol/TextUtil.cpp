@@ -190,6 +190,14 @@ namespace mol::FileReader {
 		return safeGetSubstr(l, start, offset - start);
 	}
 
+	std::string readContent() {
+		uint start = offset;
+		for (; offset < l.size(); ++offset) {
+			if (isWhiteSpace(l[offset])) break;
+		}
+		return safeGetSubstr(l, start, offset - start);
+	}
+
 	bool findKeyword(const std::string& keyword) {
 		if (l.size() < offset + keyword.size()) return false;
 		for (uint i = offset; i < l.size(); ++i) {

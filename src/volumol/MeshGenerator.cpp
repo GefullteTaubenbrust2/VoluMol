@@ -162,4 +162,44 @@ namespace mol {
 		mesh.generateNormals();
 		mesh.update();
 	}
+
+	void generateArrow(Mesh& mesh, uint resolution, float thickness) {
+		std::vector<glm::vec2> base_vertices(resolution);
+		for (int i = 0; i < resolution; ++i) {
+			float angle = (float)i / (float)resolution * 3.141592653589 * 2.0;
+			base_vertices[i] = glm::vec2(glm::cos(angle), glm::sin(angle)) * thickness;
+		}
+		mesh.vertices.resize(resolution * 6);
+		mesh.indices.resize(resolution * 15);
+		//mesh.vertices[mesh.vertices.size() - 1] = Vertex3D(glm::vec3(0.0, 0.0, 1.0), glm::vec3(1.0, 0.0, 0.0), glm::vec2(0.0, 0.0));
+		for (int i = 0; i < resolution; ++i) {
+			mesh.vertices[i] = Vertex3D(glm::vec3(base_vertices[i], 0.), glm::vec3(1.0, 0.0, 0.0), glm::vec2(0.0));
+			mesh.vertices[i + resolution] = Vertex3D(glm::vec3(base_vertices[i], 0.75), glm::vec3(1.0, 0.0, 0.0), glm::vec2(0.0));
+			mesh.vertices[i + 2 * resolution] = Vertex3D(glm::vec3(base_vertices[i], 0.75), glm::vec3(1.0, 0.0, 0.0), glm::vec2(0.0));
+			mesh.vertices[i + 3 * resolution] = Vertex3D(glm::vec3(base_vertices[i] * 2.0f, 0.75), glm::vec3(1.0, 0.0, 0.0), glm::vec2(0.0));
+			mesh.vertices[i + 4 * resolution] = Vertex3D(glm::vec3(base_vertices[i] * 2.0f, 0.75), glm::vec3(1.0, 0.0, 0.0), glm::vec2(0.0));
+			mesh.vertices[i + 5 * resolution] = Vertex3D(glm::vec3(0.0, 0.0, 1.0), glm::vec3(1.0, 0.0, 0.0), glm::vec2(0.0));
+
+			mesh.indices[i * 15]      = i;
+			mesh.indices[i * 15 + 1 ] = (i + 1) % resolution;
+			mesh.indices[i * 15 + 2 ] = i + resolution;
+			mesh.indices[i * 15 + 3 ] = (i + 1) % resolution;
+			mesh.indices[i * 15 + 4 ] = (i + 1) % resolution + resolution;
+			mesh.indices[i * 15 + 5 ] = i + resolution;
+
+			mesh.indices[i * 15 + 6 ] = i + 2 * resolution;
+			mesh.indices[i * 15 + 7 ] = (i + 1) % resolution + 2 * resolution;
+			mesh.indices[i * 15 + 8 ] = i + 3 * resolution;
+			mesh.indices[i * 15 + 9 ] = (i + 1) % resolution + 2 * resolution;
+			mesh.indices[i * 15 + 10] = (i + 1) % resolution + 3 * resolution;
+			mesh.indices[i * 15 + 11] = i + 3 * resolution;
+
+			mesh.indices[i * 15 + 12] = i + 4 * resolution;
+			mesh.indices[i * 15 + 13] = (i + 1) % resolution + 4 * resolution;
+			mesh.indices[i * 15 + 14] = i + 5 * resolution;
+		}
+
+		mesh.generateNormals();
+		mesh.update();
+	}
 }

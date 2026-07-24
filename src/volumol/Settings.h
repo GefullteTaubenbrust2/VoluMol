@@ -19,10 +19,14 @@ namespace mol {
 		float bond_thickness = 0.2f;
 		float bond_length_tolerance = 0.3f;
 		bool multicenter_coordination = false;
+		bool uniform_atom_size = false;
+		bool black_bonds = false;
 
 		glm::vec3 ambient_color = glm::vec3(0.4);
 		glm::vec3 sun_color = glm::vec3(2.);
 		glm::vec3 sun_position = glm::vec3(2., 1., 1.);
+		bool enable_shadows = true;
+		bool sticky_sun = false;
 
 		uint sphere_subdivisions = 3;
 		uint cylinder_resolution = 32;
@@ -53,10 +57,11 @@ namespace mol {
 		bool volumetric_shadowmap = true;
 		bool emissive_volume = false;
 		bool volumetric_color_mode = false;
+		bool draw_double_arrows = false;
 
 		glm::vec4 clear_color = glm::vec4(1.0);
 		bool premulitply_color = true;
-		float brightness = 1.f;
+		float brightness = 1.3f;
 
 		uint taa_quality = 1;
 
@@ -66,6 +71,9 @@ namespace mol {
 
 		uint cubemap_slice_count = 1;
 		bool cubemap_use_gpu = true;
+
+		float arrow_thickness = 0.1;
+		float arrow_length_multiplier = 1.0;
 
 		RenderProperties();
 	};

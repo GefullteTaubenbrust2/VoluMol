@@ -17,28 +17,6 @@ else:
     else:
         print("Could not find library!")
 
-__library.pyLoadMoldenFile.argtypes = [ctypes.c_char_p]
-__library.pyLoadWFXFile.argtypes = [ctypes.c_char_p]
-__library.pyLoadXYZFile.argtypes = [ctypes.c_char_p]
-__library.pyGetAtom.argtypes = [ctypes.c_int, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_float)]
-__library.pyAddBond.argtypes = [ctypes.c_int, ctypes.c_int]
-__library.pyRemoveBond.argtypes = [ctypes.c_int, ctypes.c_int]
-__library.pySetTransform.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.POINTER(ctypes.c_float)]
-__library.pyMOCount.restype = ctypes.c_int
-__library.pyGetHOMO.restype = ctypes.c_int
-__library.pyGetHOMO.argtypes = [ctypes.c_bool]
-__library.pyMOInfo.argtypes = [ctypes.c_int, ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_char_p), ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_bool)]
-__library.pyMOSetOccupation.argtypes = [ctypes.c_int, ctypes.c_float]
-__library.pyCubemapResolution.argtypes = [ctypes.c_int]
-__library.pyMOCubemap.argtypes = [ctypes.c_int]
-__library.pySetCameraOrientation.argtypes = [ctypes.c_float, ctypes.c_float, ctypes.c_float, ctypes.c_float, ctypes.c_float, ctypes.c_float]
-__library.pyGetCameraOrientation.argtypes = [ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_float)]
-__library.pySetElementProperties.argtypes = [ctypes.c_int, ctypes.c_float, ctypes.c_float, ctypes.c_float, ctypes.c_float, ctypes.c_float]
-__library.pyGetElementProperties.argtypes = [ctypes.c_int, ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_float)]
-__library.pyUpdateSettings.argtypes = [ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_float), ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_bool)]
-__library.pySaveImage.argtypes = [ctypes.c_char_p, ctypes.c_int, ctypes.c_int]
-__library.pySetPath.argtypes = [ctypes.c_wchar_p]
-
 __library.pySetPath(ctypes.c_wchar_p(__VOLUMOL_PATH))
 
 class Settings:
@@ -58,11 +36,13 @@ class Settings:
     isosurface_roughness = 0.5
     isosurface_metallicity = 0.
     volumetric_density = 50.
-    brightness = 1.
+    brightness = 1.3
     z_near = 0.3
     z_far = 300.
     volumetric_gradient = 1.
     clear_alpha = 1.0
+    arrow_thickness = 0.1
+    arrow_length_multiplier = 1.0
 
     ambient_color = (0.4, 0.4, 0.4)
     sun_color = (2., 2., 2.)
@@ -87,6 +67,11 @@ class Settings:
     emissive_volume = False
     volumetric_color_mode = False
     multicenter_coordination = False
+    draw_double_arrows = False
+    uniform_atom_sizes = False
+    enable_shadows = True
+    sticky_sun = False
+    black_bonds = False
 
 SPIN_UP = False
 SPIN_DOWN = True
@@ -143,12 +128,21 @@ def loadXYZFile(path):
 def loadCubeFile(path):
     __library.pyLoadCubeFile(path.encode("utf-8"))
 
+def loadSDFile(path):
+    __library.pyLoadSDFile(path.encode("utf-8"))
+
+def loadNormalModes(path):
+    __library.pyLoadNormalModes(path.encode("utf-8"))
+
+def drawNormalMode(mode):
+    __library.pyDrawNormalMode(ctypes.c_int(mode))
+
 def getAtom(id):
     Z = ctypes.c_int()
     x = ctypes.c_float()
     y = ctypes.c_float()
     z = ctypes.c_float()
-    __library.pyGetAtom(id, ctypes.byref(Z), ctypes.byref(x), ctypes.byref(y), ctypes.byref(z))
+    __library.pyGetAtom(ctypes.c_int(id), ctypes.byref(Z), ctypes.byref(x), ctypes.byref(y), ctypes.byref(z))
     return Atom(Z.value, (x.value, y.value, z.value))
 
 def setTransform(atom0, atom1, atom2, pos0, dir01, dir02):
@@ -166,17 +160,17 @@ def getMOInfo(orbital):
     name = ctypes.c_char_p()
     occupation = ctypes.c_float()
     spin = ctypes.c_bool()
-    __library.pyMOInfo(orbital, ctypes.byref(energy), ctypes.pointer(name), ctypes.byref(occupation), ctypes.byref(spin))
+    __library.pyMOInfo(ctypes.c_int(orbital), ctypes.byref(energy), ctypes.pointer(name), ctypes.byref(occupation), ctypes.byref(spin))
     return MOInfo(energy.value, name.value.decode("utf-8"), occupation.value, spin.value)
 
 def setMOOccupation(orbital, occupation):
-    __library.pyMOSetOccupation(orbital, occupation)
+    __library.pyMOSetOccupation(ctypes.c_int(orbital), ctypes.c_float(occupation))
 
 def setCubemapResolution(resolution):
-    __library.pyCubemapResolution(resolution)
+    __library.pyCubemapResolution(ctypes.c_int(resolution))
 
 def MOCubemap(orbital):
-    __library.pyMOCubemap(orbital)
+    __library.pyMOCubemap(ctypes.c_int(orbital))
 
 def densityCubemap():
     __library.pyDensityCubemap()
@@ -197,23 +191,26 @@ def getCameraOrientation():
     return (position[0], position[1], position[2]), (direction[0], direction[1], direction[2])
 
 def setElementProperties(Z, color, roughness, metallic):
-    __library.pySetElementProperties(Z, color[0], color[1], color[2], roughness, metallic)
+    __library.pySetElementProperties(ctypes.c_int(Z), ctypes.c_float(color[0]), ctypes.c_float(color[1]), ctypes.c_float(color[2]), ctypes.c_float(roughness), ctypes.c_float(metallic))
 
 def getElementProperties(Z):
     color = (ctypes.c_float * 3)()
     roughness = ctypes.c_float()
     metallic = ctypes.c_float()
-    __library.pyGetElementProperties(Z, color, ctypes.pointer(roughness), ctypes.pointer(metallic))
+    __library.pyGetElementProperties(ctypes.c_int(Z), color, ctypes.pointer(roughness), ctypes.pointer(metallic))
     return ((color[0], color[1], color[2]), roughness, metallic)
 
 def addBond(a,b):
-    __library.pyAddBond(a,b)
+    __library.pyAddBond(ctypes.c_int(a),ctypes.c_int(b))
+
+def addBond(a,b,order):
+    __library.pyAddBond(ctypes.c_int(a),ctypes.c_int(b),ctypes.c_int(order))
 
 def removeBond(a,b):
-    __library.pyRemoveBond(a,b)
+    __library.pyRemoveBond(ctypes.c_int(a),ctypes.c_int(b))
 
 def updateSettings(settings):
-    floats = (ctypes.c_float * 21)(
+    floats = (ctypes.c_float * 23)(
         settings.size_factor, 
         settings.bond_thickness, 
         settings.bond_length_tolerance,
@@ -234,7 +231,9 @@ def updateSettings(settings):
         settings.z_near,
         settings.z_far,
         settings.volumetric_gradient,
-        settings.clear_alpha
+        settings.clear_alpha,
+        settings.arrow_thickness,
+        settings.arrow_length_multiplier
     )
 
     vec3s = compressVec3(
@@ -255,7 +254,7 @@ def updateSettings(settings):
     ints[5] = settings.cubemap_slice_count
     ints[6] = settings.ao_iterations
 
-    bools = (ctypes.c_bool * 8)(
+    bools = (ctypes.c_bool * 13)(
         settings.smooth_bonds,
         settings.premultiply_color,
         settings.cubemap_use_gpu,
@@ -263,7 +262,12 @@ def updateSettings(settings):
         settings.volumetric_shadowmap,
         settings.emissive_volume,
         settings.volumetric_color_mode,
-        settings.multicenter_coordination
+        settings.multicenter_coordination,
+        settings.draw_double_arrows,
+        settings.uniform_atom_sizes,
+        settings.enable_shadows,
+        settings.sticky_sun,
+        settings.black_bonds
     )
 
     __library.pyUpdateSettings(floats, vec3s, ints, bools)
@@ -272,4 +276,4 @@ def launchInterface():
     __library.pyLaunchInterface()
 
 def saveImage(path, width, height):
-    __library.pySaveImage(path.encode("utf-8"), width, height)
+    __library.pySaveImage(path.encode("utf-8"), ctypes.c_int(width), ctypes.c_int(height))

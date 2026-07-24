@@ -14,7 +14,7 @@ namespace mol {
 				glm::vec3 r = atoms[j].position - pos;
 				float distance = glm::length(r);
 				if (distance < (1.f + settings.bond_length_tolerance) * (covalent_radii_A[atoms[i].Z] + covalent_radii_A[atoms[j].Z])) {
-					bonds.push_back(glm::ivec2(i, j));
+					bonds.push_back(glm::ivec3(i, j, 1));
 				}
 			}
 		}
@@ -79,7 +79,7 @@ namespace mol {
 			}
 			if (ligand_centers.size() == 1) {
 				++i;
-				bonds.insert(bonds.begin() + i, glm::ivec2(ligand_centers[0], metallic_index));
+				bonds.insert(bonds.begin() + i, glm::ivec3(ligand_centers[0], metallic_index, 1));
 			}
 			else {
 				glm::vec3 avg_position = glm::vec3(0.);
@@ -88,7 +88,7 @@ namespace mol {
 				}
 				avg_position /= ligand_centers.size();
 
-				bonds.push_back(glm::ivec2(atoms.size(), metallic_index));
+				bonds.push_back(glm::ivec3(atoms.size(), metallic_index, 1));
 				atoms.push_back(Atom(ghost_atom, avg_position));
 			}
 		}
@@ -101,12 +101,14 @@ namespace mol {
 		generateIsosphere(sphere_mesh, settings.sphere_subdivisions);
 		Mesh cylinder_mesh;
 		generateCylinder(cylinder_mesh, settings.cylinder_resolution, settings.bond_thickness, !settings.smooth_bonds);
+		Mesh cylinder2 = cylinder_mesh;
 
 		for (int i = 0; i < atoms.size(); ++i) {
 			glm::vec3 pos = atoms[i].position;
 			glm::vec3 color = settings.materials[atoms[i].Z].color;
 			glm::vec2 uv = glm::vec2(settings.materials[atoms[i].Z].roughness, settings.materials[atoms[i].Z].metallicity);
 			float size = vdw_radii_A[atoms[i].Z] * settings.size_factor;
+			if (settings.uniform_atom_size) size = settings.size_factor;
 			if (!atoms[i].Z) size = settings.bond_thickness;
 			glm::mat4 transform = glm::mat4{
 				glm::vec4(size, 0.0, 0.0, 0.0),
@@ -115,16 +117,15 @@ namespace mol {
 				glm::vec4(pos, 1.0)
 			};
 
-			Mesh sphere = sphere_mesh;
-			for (Vertex3D& v : sphere.vertices) {
+			for (Vertex3D& v : sphere_mesh.vertices) {
 				v.color = color;
 				v.tex_coord = uv;
 			}
 			
-			mesh.mergeMesh(sphere, transform);
+			mesh.mergeMesh(sphere_mesh, transform);
 		}
 
-		for (const glm::ivec2& bond : bonds) {
+		for (const glm::ivec3& bond : bonds) {
 			if (bond.x < 0 || bond.x >= atoms.size() || bond.y < 0 || bond.y >= atoms.size()) continue;
 			const Atom& a0 = atoms[bond.x];
 			const Atom& a1 = atoms[bond.y];
@@ -136,6 +137,13 @@ namespace mol {
 			glm::vec3 pos1 = a1.position;
 			glm::vec3 color1 = settings.materials[a1.Z].color;
 			glm::vec2 uv1 = glm::vec2(settings.materials[a1.Z].roughness, settings.materials[a1.Z].metallicity);
+
+			if (settings.black_bonds) {
+				color0 *= 0.0;
+				color1 *= 0.0;
+				uv0 = glm::vec2(0.0, 1.0);
+				uv1 = glm::vec2(0.0, 1.0);
+			}
 
 			glm::vec3 r = pos1 - pos0;
 			float distance = glm::length(r);
@@ -150,17 +158,153 @@ namespace mol {
 				glm::vec4(pos0, 1.0)
 			};
 
-			Mesh cylinder = cylinder_mesh;
-			for (Vertex3D& v : cylinder.vertices) {
-				v.tex_coord = v.color.r * uv0 + v.color.g * uv1;
-				v.color = v.color.r * color0 + v.color.g * color1;
+			for (int i = 0; i < cylinder_mesh.vertices.size(); ++i) {
+				Vertex3D& u = cylinder2.vertices[i];
+				Vertex3D& v = cylinder_mesh.vertices[i];
+				u.tex_coord = v.color.r * uv0 + v.color.g * uv1;
+				u.color = v.color.r * color0 + v.color.g * color1;
 			}
 
-			mesh.mergeMesh(cylinder, transform);
+			if (bond.z == 1) {
+				mesh.mergeMesh(cylinder2, transform);
+			}
+			else {
+				glm::vec3 plane_vector = glm::vec3(0.0, 0.0, 1.0);
+				if (glm::abs(glm::dot(nr, plane_vector)) > 0.9) plane_vector = glm::vec3(1.0, 0.0, 0.0);
+
+				float sqrt_order = glm::sqrt((float)bond.z);
+
+				for (const glm::ivec3& bond2 : bonds) {
+					if (bond2 == bond) continue;
+					if (bond2.x == bond.x || bond2.x == bond.y || bond2.y == bond.y || bond2.y == bond.x) {
+						glm::vec3 nr2 = glm::normalize(atoms[bond2.x].position - atoms[bond2.y].position);
+						glm::vec3 projection = nr2 - nr * glm::dot(nr, nr2);
+						if (length(projection) < 0.1) continue;
+						plane_vector = glm::normalize(projection);
+						break;
+					}
+				}
+
+				for (Vertex3D& v : sphere_mesh.vertices) {
+					v.color = color0;
+					v.tex_coord = uv0;
+				}
+
+				for (int i = 0; i < bond.z; ++i) {
+					float x = (float)i - 0.5 * (float)(bond.z - 1);
+					x *= 4.0 * settings.bond_thickness / sqrt_order;
+
+					glm::mat4 transform = glm::mat4{
+						glm::vec4(s / sqrt_order, 0.0),
+						glm::vec4(t / sqrt_order, 0.0),
+						glm::vec4(r, 0.0),
+						glm::vec4(pos0 + plane_vector * x, 1.0)
+					};
+
+					mesh.mergeMesh(cylinder2, transform);
+
+					float size = settings.bond_thickness / sqrt_order;
+
+					transform = glm::mat4{
+						glm::vec4(size, 0.0, 0.0, 0.0),
+						glm::vec4(0.0, size, 0.0, 0.0),
+						glm::vec4(0.0, 0.0, size, 0.0),
+						glm::vec4(pos0 + plane_vector * x, 1.0)
+					};
+
+					mesh.mergeMesh(sphere_mesh, transform);
+				}
+
+				for (Vertex3D& v : sphere_mesh.vertices) {
+					v.color = color1;
+					v.tex_coord = uv1;
+				}
+
+				for (int i = 0; i < bond.z; ++i) {
+					float x = (float)i - 0.5 * (float)(bond.z - 1);
+					x *= 4.0 * settings.bond_thickness / sqrt_order;
+
+					float size = settings.bond_thickness / sqrt_order;
+
+					glm::mat4 transform = glm::mat4{
+						glm::vec4(size, 0.0, 0.0, 0.0),
+						glm::vec4(0.0, size, 0.0, 0.0),
+						glm::vec4(0.0, 0.0, size, 0.0),
+						glm::vec4(pos0 + r + plane_vector * x, 1.0)
+					};
+
+					mesh.mergeMesh(sphere_mesh, transform);
+				}
+			}
+		}
+
+		Mesh arrow_mesh;
+		if (displacements.size()) generateArrow(arrow_mesh, settings.cylinder_resolution, settings.arrow_thickness);
+
+		float max_displacement = 0.0;
+		float min_displacement = 1000000000000.0;
+		for (glm::vec3 v : displacements) {
+			float l = glm::length(v);
+			if (l > max_displacement) max_displacement = l;
+			if (l < min_displacement) min_displacement = l;
+		}
+
+		for (int i = 0; i < displacements.size() && i < atoms.size(); ++i) {
+			glm::vec3 pos0 = atoms[i].position;
+			glm::vec3 pos1 = pos0 + displacements[i];
+
+			glm::vec3 r = displacements[i] * settings.arrow_length_multiplier;
+			float l = glm::length(displacements[i]);
+			glm::vec3 nr = r / glm::abs(settings.arrow_length_multiplier * l);
+			glm::vec3 s = glm::normalize(glm::cross(nr, nr.z * nr.z > 0.5 ? glm::vec3(1.0, 0.0, 0.0) : glm::vec3(0.0, 0.0, 1.0)));
+			glm::vec3 t = glm::cross(nr, s);
+
+			float f = (l - min_displacement) / (max_displacement - min_displacement);
+
+			float w = 1.0;
+			if (l * glm::abs(settings.arrow_length_multiplier) / settings.arrow_thickness < 10.0) {
+				w = 0.1 * l * glm::abs(settings.arrow_length_multiplier) / settings.arrow_thickness;
+			}
+
+			for (Vertex3D& v : arrow_mesh.vertices) {
+				v.tex_coord = glm::vec2(settings.isosurface_roughness, settings.isosurface_metallicity);
+				//v.color = glm::sqrt(settings.mo_colors[0] * settings.mo_colors[0] * f + settings.mo_colors[1] * settings.mo_colors[1] * (1.f - f));
+				v.color = settings.mo_colors[0];
+			}
+
+			glm::mat4 transform = glm::mat4{
+				glm::vec4(s * w, 0.0),
+				glm::vec4(t * w, 0.0),
+				glm::vec4(r, 0.0),
+				glm::vec4(pos0, 1.0)
+			};
+
+			mesh.mergeMesh(arrow_mesh, transform);
+
+			if (settings.draw_double_arrows) {
+				for (Vertex3D& v : arrow_mesh.vertices) {
+					v.tex_coord = glm::vec2(settings.isosurface_roughness, settings.isosurface_metallicity);
+					//v.color = glm::sqrt(settings.mo_colors[0] * settings.mo_colors[0] * f + settings.mo_colors[1] * settings.mo_colors[1] * (1.f - f));
+					v.color = settings.mo_colors[1];
+				}
+
+				transform = glm::mat4{
+					glm::vec4(s * w, 0.0),
+					glm::vec4(-t * w, 0.0),
+					glm::vec4(-r, 0.0),
+					glm::vec4(pos0, 1.0)
+				};
+
+				mesh.mergeMesh(arrow_mesh, transform);
+			}
 		}
 
 		mesh.generateNormals();
 		mesh.update();
+	}
+
+	void Molecule::setDisplacements(const std::vector<glm::vec3>& displacements) {
+		Molecule::displacements = displacements;
 	}
 
 	uint Molecule::getIndex(uint id) const {

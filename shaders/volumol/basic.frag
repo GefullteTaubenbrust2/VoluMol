@@ -130,7 +130,11 @@ void main() {
 		}
 	}
 
+#ifdef ENABLE_SHADOWS
 	float shadow = smoothShadow(level, vertPos);
+#else
+	float shadow = 1.0;
+#endif
 
 	vec3 color = baseColor * ambient_color + Lo * shadow;
 

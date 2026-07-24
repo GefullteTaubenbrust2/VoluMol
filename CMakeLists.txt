@@ -65,6 +65,7 @@ target_sources(
 	src/logic/TextReading.cpp
 	
 	src/volumol/CubeReader.cpp
+	src/volumol/Displacements.cpp
 	src/volumol/Isosurface.cpp
 	src/volumol/MeshGenerator.cpp
 	src/volumol/Molden.cpp
@@ -72,6 +73,7 @@ target_sources(
 	src/volumol/MolInterface.cpp
 	src/volumol/MolRenderer.cpp
 	src/volumol/Orbital.cpp
+	src/volumol/SDFReader.cpp
 	src/volumol/Settings.cpp
 	src/volumol/TextUtil.cpp
 	src/volumol/WFXReader.cpp
