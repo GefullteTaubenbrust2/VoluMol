@@ -27,7 +27,7 @@ namespace mol {
 				bond.y = x;
 			}
 			
-			if (atoms[bond.x].Z != carbon || !element_metallic[atoms[bond.y].Z]) continue;
+			if (atoms[bond.x].Z != carbon || element_metallic[atoms[bond.y].Z] < 1.0) continue;
 			
 			int metallic_index = bond.y;
 			bonds.erase(bonds.begin() + i);
@@ -362,16 +362,16 @@ namespace mol {
 		          "Lr","Rf","Db","Sg","Bh","Hs","Mt","Ds","Rg","Cn","Nh","Fl","Mc","Lv","Ts","Og"
 	};
 
-	const bool element_metallic[119] = {
-		false,
-		false,                                                                                                                 false,
-		true , true ,                                                                       false, false, false, false, false, false,
-		true , true ,                                                                       true , false, false, false, false, false,
-		true , true , true , true , true , true , true , true , true , true , true , true , true , false, false, false, false, false,
-		true , true , true , true , true , true , true , true , true , true , true , true , true , true , true , false, false, false,
-		true , true , true , true , true , true , true , true , true , true , true , true , true , true , true , true ,
-		              true , true , true , true , true , true , true , true , true , true , true , true , true , false, false, false,
-		true , true , true , true , true , true , true , true , true , true , true , true , true , true , true , true ,
-		              true , true , true , true , true , true , true , true , true , true , true , true , true , true , false, false,
+	const float element_metallic[119] = {
+		0.0,
+		0.0,                                                                                 0.0,
+		1.0, 1.0,                                                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+		1.0, 1.0,                                                   1.0, 0.5, 0.0, 0.0, 0.0, 0.0,
+		1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.5, 0.5, 0.0, 0.0, 0.0,
+		1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.5, 0.5, 0.0, 0.0,
+		1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+		          1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.5, 0.0,
+		1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+		          1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.5, 0.0,
 	};
 }
