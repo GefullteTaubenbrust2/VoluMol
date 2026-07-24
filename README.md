@@ -45,7 +45,7 @@ volumol.dispose()
 ## Classes
 
 ### `Settings`
-Controls the functions of the program. Some settings take effect at all times, other affect generation steps, like molecule mesh generation (MMG), cubemap generation (CG) and isosurface generation (IG). In this case, `updateSettings()` must be called *before* the generation step. Most default values are reasonable, but you will need to change them if you want to achieve certain effects. It can also make sense to lower visual quality for preview purposes and increase fidelity for renders.
+Controls the functions of the program. Some settings take effect at all times, others affect generation steps, like molecule mesh generation (MMG), cubemap generation (CG) and isosurface generation (IG). In this case, `updateSettings()` must be called *before* the generation step. Most default values are reasonable, but you will need to change them if you want to achieve certain effects. It can also make sense to lower visual quality for preview purposes and increase fidelity for renders.
 |Name|Type|Description|Default|
 |-|-|-|-|
 |`size_factor`|`float`| MMG: Controls the displayed size of atoms. This size is set to `size_factor` multiplied by the Van-der-Waals radius of the atom. |`0.2`|
@@ -64,11 +64,13 @@ Controls the functions of the program. Some settings take effect at all times, o
 |`isosurface_roughness`|`float`| IG: The roughness of the isosurface material, between `0` and `1`. Lower values mean shinier isosurfaces. |`0.5`|
 |`isosurface_metallicity`|`float`| IG: The amount of metallic shading of the isosurface material. Normally this should be set to `0` or `1`. |`0.`|
 |`volumetric_density`|`float`| Controls the density of volumetric MOs. |`50.`
-|`brightness`|`float`| Controls how much the image is brightened during post processing. Beware that values beyond `1.` can cause colors to exceed the screen's range and clip. |`1.`|
+|`brightness`|`float`| Controls how much the image is brightened during post processing. Beware that values beyond `1.` can cause colors to exceed the screen's range and clip. |`1.3`|
 |`z_near`|`float`| Camera near clipping plane. Small values mean you can get closer to objects before they clip, but also decrease depth resolution. |`0.3`|
 |`z_far`|`float`| Camera far clipping plane. This essentially controls how far you can see, but very large values decrease depth resolution. |`300.`|
 |`volumetric_gradient`|`float`| Effective only if `volumetric_color_mode = True` and controls the color gradient. Higher values mean the color changes more strongly with increasing function values.|`1.`|
 |`clear_alpha`|`float`| Controls the transparency of the background. It is recommended to use 0 for transparent backgrounds, in which ideally a black `clear_color` is used or 1 for opaque backgrounds.|`1.`|
+|`arrow_thickness`|`float`| Controls the thickness of any arrows to be drawn. |`0.1`|
+|`arrow_length_multiplifer`|`float`| Controls the length of any arrows to be drawn. |`1.0`|
 |`ambient_color`|`tuple`| RGB values for ambient light color. Higher values mean shadows will be weaker. |`(0.4, 0.4, 0.4)`|
 |`sun_color`|`tuple`| RGB values of the sun's color. Values can exceed `1.` due to tone mapping. |`(2., 2., 2.)`|
 |`sun_position`|`tuple`| Vector describing the position of the sun in the "sky". Need not be normalized. |`(2., 1., 1.)`|
@@ -90,6 +92,11 @@ Controls the functions of the program. Some settings take effect at all times, o
 |`emissive_volume`|`bool`| When set to `True`, an emissive volume is used for volumetrics (looks a bit like plasma). When set to `False`, a scatter volume (looks more like clouds/smoke) is used instead. The emissive volume is computationally much cheaper.|`False`|
 |`volumetric_color_mode`|`bool`| Controls how colors for volumetrics are calculated. When set to `False`, MOs are colored based on sign, whereas when set to `True`, `mo_color_0` and `mo_color_1` are mixed based on function values. The mixing can be controlled with `volumetric_gradient`. |`False`|
 |`multicenter_coordination`|`bool`| MMG: When set to `True`, organic ligands with high hapticity will be drawn with only one coordinate bond. This helps make species like metallocenes look less cluttered. |`False`|
+|`draw_double_arrows`|`bool`| MMG: When set to `True`, any displacements will be drawn with two opposing arrows of opposite color (the MO materials will be used). This helps visualize motion along bond axes, but can also result in more crowded images. |`False`|
+|`uniform_atom_sizes`|`bool`| MMG: When set to `True`, all atoms will be sized according to the `size_factor`, completely ignoring Van-der-Waals radii. |`False`|
+|`enable_shadows`|`bool`| Should objects cast shadows? |`True`|
+|`sticky_sun`|`bool`| When set to true, the sun rotates with the camera. |`False`|
+|`black_bonds`|`bool`| Makes all bonds pitch black. |`False`|
 
 
 ### `MOInfo`
@@ -131,7 +138,7 @@ Loads a Molden file. This envolves loading both XYZ and orbital data.
 
 
 ### `loadWFXFile(path)`
-Loads a .wfx file. This envolves loading both XYZ and orbital data. This is slightly experimental.
+Loads a .wfx file. This envolves loading both XYZ and orbital data.
 - `path` Relative path to the file including its name.
 
 
@@ -140,8 +147,18 @@ Loads a XYZ file and disables previous isosurfaces/volumetrics.
 - `path` Relative path to the file including its name.
 
 
+### `loadSDFile(path)`
+Loads a SD file and disables previous isosurfaces/volumetrics. Note that this is the only format that supports multiple bonds. For files with multiple molecules, only the first will be loaded.
+- `path` Relative path to the file including its name.
+
+
 ### `loadCubeFile(path)`
 Loads a Gaussian cube file and disables previous isosurfaces/volumetrics. The present volumetric data can be visualized directly using `setIsosurface()` and/or `setVolumetric()`.
+- `path` Relative path to the file including its name.
+
+
+### `loadNormalModes(path)`
+Loads a set of normal modes and disables previous isosurfaces/volumetrics. This requires an appropriate molecule to already be loaded. The accepted format is that of ORCA's `NORMAL MODES` output, containing only the relevant table.
 - `path` Relative path to the file including its name.
 
 
@@ -150,7 +167,11 @@ Returns an atom corresponding to the provided `id`. Some file formats assign IDs
 
 
 ### `addBond(atom0, atom1)`
-Will draw a bond between atoms with ids `atom0` and `atom1`.
+Will draw a bond between atoms with ids `atom0` and `atom1`. If a bond is already present, the bond order will be set to 1.
+
+
+### `addBond(atom0, atom1, order)`
+Will draw a bond of bond order `order` between atoms with ids `atom0` and `atom1`. If a bond is already present, the bond order will be changed.
 
 
 ### `removeBond(atom0, atom1)`
@@ -207,6 +228,10 @@ Generate an isosurface mesh from a previously generated cubemap.
 
 ### `setVolumetric()`
 Use a previously generated cubemap to render a volumetric representation.
+
+
+### `drawNormalMode(mode)`
+Draw arrows representing the `mode`-th normal mode. For instance, 6 would ordinarily be the lowest-frequency mode of most molecules.
 
 
 ### `setCameraOrientation(position, direction)`
