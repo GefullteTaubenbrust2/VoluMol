@@ -38,7 +38,7 @@ namespace mol::Renderer {
 
 	std::vector<glm::vec2> taa_jitter_offsets = {glm::vec2(0.f)};
 
-	glm::vec3 camera_position, camera_direction;
+	glm::vec3 camera_position, camera_direction, camera_up;
 
 	void init() {
 		mesh_shader = fgr::Shader("shaders/volumol/basic.vert", "shaders/volumol/basic.frag", std::vector<std::string>{
@@ -170,7 +170,7 @@ namespace mol::Renderer {
 			post_shader.compile(definitions);
 		}
 
-		orientCamera(camera_position, camera_direction);
+		orientCamera(camera_position, camera_direction, camera_up);
 
 		settings = _settings;
 		glm::vec3 sun_position = glm::mat3(model_matrix) * settings.sun_position;
@@ -328,12 +328,13 @@ namespace mol::Renderer {
 		) * intermediate_space;
 	}
 
-	void orientCamera(const glm::vec3& position, const glm::vec3& direction) {
+	void orientCamera(const glm::vec3& position, const glm::vec3& direction, const glm::vec3& up) {
 		glm::vec3 p = model_matrix * glm::vec4(position, 1.f);
 		glm::vec3 d = glm::mat3(model_matrix) * glm::normalize(direction);
-		view.setOrientation(p, d, glm::mat3(model_matrix) * glm::vec3(0., 0., 1.));
+		view.setOrientation(p, d, glm::mat3(model_matrix) * glm::normalize(up));
 		camera_position = position;
 		camera_direction = direction;
+		camera_up = up;
 		mesh_shader.setVec3(6, p);
 		mesh_shader.setVec3(11, d);
 		volumetric_shader.setVec3(2, p);

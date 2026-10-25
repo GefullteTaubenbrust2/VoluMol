@@ -181,14 +181,15 @@ def setIsosurface():
 def setVolumetric():
     __library.pySetVolumetric()
 
-def setCameraOrientation(position, direction):
-    __library.pySetCameraOrientation(ctypes.c_float(position[0]), ctypes.c_float(position[1]), ctypes.c_float(position[2]), ctypes.c_float(direction[0]), ctypes.c_float(direction[1]), ctypes.c_float(direction[2]))
+def setCameraOrientation(position, direction, up = (0, 0, 1)):
+    __library.pySetCameraOrientation(ctypes.c_float(position[0]), ctypes.c_float(position[1]), ctypes.c_float(position[2]), ctypes.c_float(direction[0]), ctypes.c_float(direction[1]), ctypes.c_float(direction[2]), ctypes.c_float(up[0]), ctypes.c_float(up[1]), ctypes.c_float(up[2]))
 
 def getCameraOrientation():
     position = (ctypes.c_float * 3)()
     direction = (ctypes.c_float * 3)()
-    __library.pyGetCameraOrientation(position, direction)
-    return (position[0], position[1], position[2]), (direction[0], direction[1], direction[2])
+    up = (ctypes.c_float * 3)()
+    __library.pyGetCameraOrientation(position, direction, up)
+    return (position[0], position[1], position[2]), (direction[0], direction[1], direction[2]), (up[0], up[1], up[2])
 
 def setElementProperties(Z, color, roughness, metallic):
     __library.pySetElementProperties(ctypes.c_int(Z), ctypes.c_float(color[0]), ctypes.c_float(color[1]), ctypes.c_float(color[2]), ctypes.c_float(roughness), ctypes.c_float(metallic))

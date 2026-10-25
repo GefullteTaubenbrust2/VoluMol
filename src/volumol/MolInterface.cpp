@@ -1,6 +1,7 @@
 #include "MolInterface.h"
 
 #include "MolRenderer.h"
+#include "Settings.h"
 
 #include "../graphics/Window.h"
 
@@ -10,6 +11,8 @@
 #include <sstream>
 
 namespace mol {
+	extern RenderProperties settings;
+
 	void createWindow() {
 		fgr::window::openWindow(800, 600, "VoluMol", true, 1);
 		
@@ -32,12 +35,14 @@ namespace mol {
 
 		glm::vec3 position = glm::vec3(-15., 0., 0.);
 		glm::vec3 direction = glm::vec3(1., 0., 0.);
+		glm::vec3 up = glm::vec3(0.0, 0.0, 1.0);
+
+		float rate = 2.f * settings.fov;
+		if (settings.orthographic) rate = 140.f;
 
 		float yaw = 0.f;
 		float pitch = 0.f;
 
-		float yaw_start = 0.f;
-		float pitch_start = 0.f;
 		glm::vec2 mouse_start;
 
 		float speed = 10.f;
@@ -58,28 +63,34 @@ namespace mol {
 
 			fgr::window::checkEvents();
 
-			if (flo::getMouseButton(flo::MouseButton::right) == flo::InputType::hit) {
-				pitch_start = pitch;
-				yaw_start = yaw;
+			if (flo::getMouseButton(flo::MouseButton::right) & flo::InputType::hit) {
 				mouse_start = flo::getMousePosition();
 			}
-			else if (flo::getMouseButton(flo::MouseButton::right) == flo::InputType::held) {
-				glm::vec2 mp = -(flo::getMousePosition() - mouse_start) * glm::radians(70.f) / 250.f;
-				yaw = glm::mod(yaw_start + mp.x, 6.283185307f);
-				pitch = glm::clamp(pitch_start + mp.y, -1.5707f, 1.5707f);
+			else if (flo::getMouseButton(flo::MouseButton::right) & flo::InputType::held) {
+				glm::vec2 mp = -(flo::getMousePosition() - mouse_start) * glm::radians(rate) / (float)fgr::window::width;
+				yaw = glm::mod(mp.x, 6.283185307f);
+				pitch = glm::clamp(mp.y, -1.5707f, 1.5707f);
+				if (yaw || pitch) {
+					glm::vec3 cross = glm::cross(direction, up);
+					glm::vec3 new_direction = glm::normalize(glm::cos(pitch) * (glm::cos(yaw) * direction + glm::sin(yaw) * cross) - glm::sin(pitch) * up);
+					glm::vec3 new_up = glm::normalize(glm::sin(pitch) * (glm::cos(yaw) * direction + glm::sin(yaw) * cross) + glm::cos(pitch) * up);
+					direction = new_direction;
+					up = new_up;
+
+					mouse_start = flo::getMousePosition();
+				}
 			}
-			direction = glm::vec3(glm::cos(yaw) * glm::cos(pitch), glm::sin(yaw) * glm::cos(pitch), glm::sin(pitch));
 
 			float deltaTime = fgr::window::getDeltaTime();
 
-			glm::vec3 side = glm::normalize(glm::cross(direction, glm::vec3(0., 0., 1.)));
+			glm::vec3 side = glm::normalize(glm::cross(direction, up));
 
-			if (flo::getKey(key_w) == flo::InputType::held) position += speed * glm::normalize(direction * glm::vec3(1., 1., 0.)) * deltaTime;
-			if (flo::getKey(key_s) == flo::InputType::held) position -= speed * glm::normalize(direction * glm::vec3(1., 1., 0.)) * deltaTime;
-			if (flo::getKey(key_d) == flo::InputType::held) position += speed * side * deltaTime;
-			if (flo::getKey(key_a) == flo::InputType::held) position -= speed * side * deltaTime;
-			if (flo::getKey(key_shift) == flo::InputType::held) position.z += speed * deltaTime;
-			if (flo::getKey(key_ctrl) == flo::InputType::held) position.z -= speed * deltaTime;
+			if (flo::getKey(key_w) & flo::InputType::held) position += speed * direction * deltaTime;
+			if (flo::getKey(key_s) & flo::InputType::held) position -= speed * direction * deltaTime;
+			if (flo::getKey(key_d) & flo::InputType::held) position += speed * side * deltaTime;
+			if (flo::getKey(key_a) & flo::InputType::held) position -= speed * side * deltaTime;
+			if (flo::getKey(key_shift) & flo::InputType::held) position += up * speed * deltaTime;
+			if (flo::getKey(key_ctrl) & flo::InputType::held) position -= up * speed * deltaTime;
 
 			if (flo::getScroll().y > 0.00001) {
 				speed *= 1.5;
@@ -91,7 +102,7 @@ namespace mol {
 
 			fgr::window::clear(glm::vec3(1.));
 
-			mol::Renderer::orientCamera(position, direction);
+			mol::Renderer::orientCamera(position, direction, up);
 
 			mol::Renderer::renderFrame(fgr::window::width, fgr::window::height);
 

@@ -30,7 +30,7 @@
 extern std::string executable_path;
 
 namespace mol::Renderer {
-		extern glm::vec3 camera_position, camera_direction;
+		extern glm::vec3 camera_position, camera_direction, camera_up;
 }
 
 glm::vec3 vec3FromFloats(float* floats, uint offset) {
@@ -160,17 +160,20 @@ DLLEXPORT void pySetVolumetric() {
 	mol::Renderer::setVolumetric();
 }
 
-DLLEXPORT void pySetCameraOrientation(float px, float py, float pz, float dx, float dy, float dz) {
-	mol::Renderer::orientCamera(glm::vec3(px, py, pz), glm::vec3(dx, dy, dz));
+DLLEXPORT void pySetCameraOrientation(float px, float py, float pz, float dx, float dy, float dz, float ux, float uy, float uz) {
+	mol::Renderer::orientCamera(glm::vec3(px, py, pz), glm::vec3(dx, dy, dz), glm::vec3(ux, uy, uz));
 }
 
-DLLEXPORT void pyGetCameraOrientation(float* position, float* direction) {
+DLLEXPORT void pyGetCameraOrientation(float* position, float* direction, float* up) {
 	position[0]		= mol::Renderer::camera_position.x;
 	position[1]		= mol::Renderer::camera_position.y;
 	position[2]		= mol::Renderer::camera_position.z;
 	direction[0]	= mol::Renderer::camera_direction.x;
 	direction[1]	= mol::Renderer::camera_direction.y;
 	direction[2]	= mol::Renderer::camera_direction.z;
+	up[0] = mol::Renderer::camera_up.x;
+	up[1] = mol::Renderer::camera_up.y;
+	up[2] = mol::Renderer::camera_up.z;
 }
 
 DLLEXPORT void pySetElementProperties(int Z, float r, float g, float b, float roughness, float metallicity) {

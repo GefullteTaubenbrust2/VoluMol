@@ -27,7 +27,7 @@ namespace mol::Renderer {
 
 	glm::mat4 getTransform(uint atom0, uint atom1, uint atom2, const glm::vec3 position0, const glm::vec3 dir01, const glm::vec3 dir02);
 
-	void orientCamera(const glm::vec3& position, const glm::vec3& direction);
+	void orientCamera(const glm::vec3& position, const glm::vec3& direction, const glm::vec3& up);
 
 	void renderFrame(uint width, uint height);
 
