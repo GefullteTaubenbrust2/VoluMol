@@ -10,6 +10,7 @@
 #include "MolRenderer.h"
 #include "Settings.h"
 #include "TextUtil.h"
+#include "VASP.h"
 
 #include "../logic/TextReading.h"
 #include "../graphics/Window.h"
@@ -83,6 +84,11 @@ DLLEXPORT void pyLoadCubeFile(char const* path) {
 DLLEXPORT void pyLoadSDFile(char const* path) {
 	mol::FileReader::readFile(path);
 	mol::SDF::loadFile();
+}
+
+DLLEXPORT void pyLoadVASPFile(char const* path) {
+	mol::FileReader::readFile(path);
+	mol::VASP::loadFile();
 }
 
 DLLEXPORT void pyLoadNormalModes(char const* path) {
@@ -221,6 +227,8 @@ DLLEXPORT void pyUpdateSettings(float* floats, float* vectors, int* ints, bool* 
 	settings.clear_color.a					= floats[20];
 	settings.arrow_thickness				= floats[21];
 	settings.arrow_length_multiplier		= floats[22];
+	settings.unitcell_thickness				= floats[23];
+	settings.unitcell_material				= glm::vec2(floats[24], floats[25]);
 
 	settings.ambient_color					= vec3FromFloats(vectors, 0);
 	settings.sun_color						= vec3FromFloats(vectors, 1);
@@ -228,6 +236,7 @@ DLLEXPORT void pyUpdateSettings(float* floats, float* vectors, int* ints, bool* 
 	settings.mo_colors[0]					= vec3FromFloats(vectors, 3);
 	settings.mo_colors[1]					= vec3FromFloats(vectors, 4);
 	settings.clear_color					= glm::vec4(vec3FromFloats(vectors, 5), settings.clear_color.a);
+	settings.unitcell_color					= vec3FromFloats(vectors, 6);
 
 	settings.sphere_subdivisions			= ints[0];
 	settings.cylinder_resolution			= ints[1];

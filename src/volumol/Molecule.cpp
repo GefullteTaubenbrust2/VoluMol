@@ -3,6 +3,8 @@
 #include "Settings.h"
 
 namespace mol {
+	extern glm::vec3 lattice_vectors[3];
+
 	Atom::Atom(uint atomic_number, const glm::vec3& position) :
 		Z(atomic_number), position(position) {}
 
@@ -94,13 +96,56 @@ namespace mol {
 		}
 	}
 
+	void configureCylinder(Mesh& source, Mesh& dest, const glm::vec3& color0, const glm::vec3& color1, const glm::vec2& uv0, const glm::vec2& uv1) {
+		for (int i = 0; i < source.vertices.size(); ++i) {
+			Vertex3D& u = dest.vertices[i];
+			Vertex3D& v = source.vertices[i];
+			u.tex_coord = v.color.r * uv0 + v.color.g * uv1;
+			u.color = v.color.r * color0 + v.color.g * color1;
+		}
+	}
+
+	void drawCylinder(Mesh& mesh, Mesh& cylinder, float radius, const glm::vec3& origin, const glm::vec3& direction) {
+		float distance = glm::length(direction);
+		glm::vec3 nr = glm::normalize(direction);
+		glm::vec3 s = glm::normalize(glm::cross(nr, nr.z * nr.z > 0.5 ? glm::vec3(1.0, 0.0, 0.0) : glm::vec3(0.0, 0.0, 1.0)));
+		glm::vec3 t = glm::cross(nr, s);
+
+		glm::mat4 transform = glm::mat4{
+			glm::vec4(s * radius, 0.0),
+			glm::vec4(t * radius, 0.0),
+			glm::vec4(direction, 0.0),
+			glm::vec4(origin, 1.0)
+		};
+
+		mesh.mergeMesh(cylinder, transform);
+	}
+
+	void colorMesh(Mesh& mesh, const glm::vec3& color, const glm::vec2& uv) {
+		for (Vertex3D& v : mesh.vertices) {
+			v.color = color;
+			v.tex_coord = uv;
+		}
+	}
+
+	void drawSphere(Mesh& mesh, Mesh& sphere, const glm::vec3& pos, float size) {
+		glm::mat4 transform = glm::mat4{
+				glm::vec4(size, 0.0, 0.0, 0.0),
+				glm::vec4(0.0, size, 0.0, 0.0),
+				glm::vec4(0.0, 0.0, size, 0.0),
+				glm::vec4(pos, 1.0)
+		};
+
+		mesh.mergeMesh(sphere, transform);
+	}
+
 	void Molecule::generateMesh(Mesh& mesh) const {
 		mesh.vertices.clear();
 		mesh.indices.clear();
 		Mesh sphere_mesh;
 		generateIsosphere(sphere_mesh, settings.sphere_subdivisions);
 		Mesh cylinder_mesh;
-		generateCylinder(cylinder_mesh, settings.cylinder_resolution, settings.bond_thickness, !settings.smooth_bonds);
+		generateCylinder(cylinder_mesh, settings.cylinder_resolution, settings.bond_thickness, !settings.smooth_bonds && !settings.black_bonds);
 		Mesh cylinder2 = cylinder_mesh;
 
 		for (int i = 0; i < atoms.size(); ++i) {
@@ -110,19 +155,9 @@ namespace mol {
 			float size = vdw_radii_A[atoms[i].Z] * settings.size_factor;
 			if (settings.uniform_atom_size) size = settings.size_factor;
 			if (!atoms[i].Z) size = settings.bond_thickness;
-			glm::mat4 transform = glm::mat4{
-				glm::vec4(size, 0.0, 0.0, 0.0),
-				glm::vec4(0.0, size, 0.0, 0.0),
-				glm::vec4(0.0, 0.0, size, 0.0),
-				glm::vec4(pos, 1.0)
-			};
-
-			for (Vertex3D& v : sphere_mesh.vertices) {
-				v.color = color;
-				v.tex_coord = uv;
-			}
 			
-			mesh.mergeMesh(sphere_mesh, transform);
+			colorMesh(sphere_mesh, color, uv);
+			drawSphere(mesh, sphere_mesh, pos, size);
 		}
 
 		for (const glm::ivec3& bond : bonds) {
@@ -145,30 +180,13 @@ namespace mol {
 				uv1 = glm::vec2(0.0, 1.0);
 			}
 
-			glm::vec3 r = pos1 - pos0;
-			float distance = glm::length(r);
-			glm::vec3 nr = glm::normalize(r);
-			glm::vec3 s = glm::normalize(glm::cross(nr, nr.z * nr.z > 0.5 ? glm::vec3(1.0, 0.0, 0.0) : glm::vec3(0.0, 0.0, 1.0)));
-			glm::vec3 t = glm::cross(nr, s);
-
-			glm::mat4 transform = glm::mat4{
-				glm::vec4(s, 0.0),
-				glm::vec4(t, 0.0),
-				glm::vec4(r, 0.0),
-				glm::vec4(pos0, 1.0)
-			};
-
-			for (int i = 0; i < cylinder_mesh.vertices.size(); ++i) {
-				Vertex3D& u = cylinder2.vertices[i];
-				Vertex3D& v = cylinder_mesh.vertices[i];
-				u.tex_coord = v.color.r * uv0 + v.color.g * uv1;
-				u.color = v.color.r * color0 + v.color.g * color1;
-			}
+			configureCylinder(cylinder_mesh, cylinder2, color0, color1, uv0, uv1);
 
 			if (bond.z == 1) {
-				mesh.mergeMesh(cylinder2, transform);
+				drawCylinder(mesh, cylinder2, 1.0, pos0, pos1 - pos0);
 			}
 			else {
+				glm::vec3 nr = glm::normalize(pos1 - pos0);
 				glm::vec3 plane_vector = glm::vec3(0.0, 0.0, 1.0);
 				if (glm::abs(glm::dot(nr, plane_vector)) > 0.9) plane_vector = glm::vec3(1.0, 0.0, 0.0);
 
@@ -185,40 +203,20 @@ namespace mol {
 					}
 				}
 
-				for (Vertex3D& v : sphere_mesh.vertices) {
-					v.color = color0;
-					v.tex_coord = uv0;
-				}
+				colorMesh(sphere_mesh, color0, uv0);
 
 				for (int i = 0; i < bond.z; ++i) {
 					float x = (float)i - 0.5 * (float)(bond.z - 1);
 					x *= 4.0 * settings.bond_thickness / sqrt_order;
 
-					glm::mat4 transform = glm::mat4{
-						glm::vec4(s / sqrt_order, 0.0),
-						glm::vec4(t / sqrt_order, 0.0),
-						glm::vec4(r, 0.0),
-						glm::vec4(pos0 + plane_vector * x, 1.0)
-					};
-
-					mesh.mergeMesh(cylinder2, transform);
+					drawCylinder(mesh, cylinder2, 1.0 / sqrt_order, pos0 + plane_vector * x, pos1 - pos0);
 
 					float size = settings.bond_thickness / sqrt_order;
 
-					transform = glm::mat4{
-						glm::vec4(size, 0.0, 0.0, 0.0),
-						glm::vec4(0.0, size, 0.0, 0.0),
-						glm::vec4(0.0, 0.0, size, 0.0),
-						glm::vec4(pos0 + plane_vector * x, 1.0)
-					};
-
-					mesh.mergeMesh(sphere_mesh, transform);
+					drawSphere(mesh, sphere_mesh, pos0 + plane_vector * x, size);
 				}
 
-				for (Vertex3D& v : sphere_mesh.vertices) {
-					v.color = color1;
-					v.tex_coord = uv1;
-				}
+				colorMesh(sphere_mesh, color1, uv1);
 
 				for (int i = 0; i < bond.z; ++i) {
 					float x = (float)i - 0.5 * (float)(bond.z - 1);
@@ -226,14 +224,7 @@ namespace mol {
 
 					float size = settings.bond_thickness / sqrt_order;
 
-					glm::mat4 transform = glm::mat4{
-						glm::vec4(size, 0.0, 0.0, 0.0),
-						glm::vec4(0.0, size, 0.0, 0.0),
-						glm::vec4(0.0, 0.0, size, 0.0),
-						glm::vec4(pos0 + r + plane_vector * x, 1.0)
-					};
-
-					mesh.mergeMesh(sphere_mesh, transform);
+					drawSphere(mesh, sphere_mesh, pos1 + plane_vector * x, size);
 				}
 			}
 		}
@@ -297,6 +288,40 @@ namespace mol {
 
 				mesh.mergeMesh(arrow_mesh, transform);
 			}
+		}
+
+		if (lattice_vectors[0].length() > 0.0001 && lattice_vectors[1].length() > 0.0001 && lattice_vectors[2].length() > 0.0001) {
+			float line_radius = settings.unitcell_thickness;
+
+			generateCylinder(cylinder_mesh, settings.cylinder_resolution, line_radius, false);
+			colorMesh(sphere_mesh, settings.unitcell_color, settings.unitcell_material);
+			colorMesh(cylinder_mesh, settings.unitcell_color, settings.unitcell_material);
+
+			drawSphere(mesh, sphere_mesh, 0.f * lattice_vectors[0] + 0.f * lattice_vectors[1] + 0.f * lattice_vectors[2], line_radius);
+			drawSphere(mesh, sphere_mesh, 0.f * lattice_vectors[0] + 0.f * lattice_vectors[1] + 1.f * lattice_vectors[2], line_radius);
+			drawSphere(mesh, sphere_mesh, 0.f * lattice_vectors[0] + 1.f * lattice_vectors[1] + 0.f * lattice_vectors[2], line_radius);
+			drawSphere(mesh, sphere_mesh, 0.f * lattice_vectors[0] + 1.f * lattice_vectors[1] + 1.f * lattice_vectors[2], line_radius);
+			drawSphere(mesh, sphere_mesh, 1.f * lattice_vectors[0] + 0.f * lattice_vectors[1] + 0.f * lattice_vectors[2], line_radius);
+			drawSphere(mesh, sphere_mesh, 1.f * lattice_vectors[0] + 0.f * lattice_vectors[1] + 1.f * lattice_vectors[2], line_radius);
+			drawSphere(mesh, sphere_mesh, 1.f * lattice_vectors[0] + 1.f * lattice_vectors[1] + 0.f * lattice_vectors[2], line_radius);
+			drawSphere(mesh, sphere_mesh, 1.f * lattice_vectors[0] + 1.f * lattice_vectors[1] + 1.f * lattice_vectors[2], line_radius);
+
+			drawCylinder(mesh, cylinder_mesh, 1.0, glm::vec3(0.0), lattice_vectors[0]);
+			drawCylinder(mesh, cylinder_mesh, 1.0, glm::vec3(0.0), lattice_vectors[1]);
+			drawCylinder(mesh, cylinder_mesh, 1.0, glm::vec3(0.0), lattice_vectors[2]);
+
+			drawCylinder(mesh, cylinder_mesh, 1.0, lattice_vectors[0], lattice_vectors[1]);
+			drawCylinder(mesh, cylinder_mesh, 1.0, lattice_vectors[0], lattice_vectors[2]);
+
+			drawCylinder(mesh, cylinder_mesh, 1.0, lattice_vectors[1], lattice_vectors[0]);
+			drawCylinder(mesh, cylinder_mesh, 1.0, lattice_vectors[1], lattice_vectors[2]);
+
+			drawCylinder(mesh, cylinder_mesh, 1.0, lattice_vectors[2], lattice_vectors[0]);
+			drawCylinder(mesh, cylinder_mesh, 1.0, lattice_vectors[2], lattice_vectors[1]);
+
+			drawCylinder(mesh, cylinder_mesh, 1.0, lattice_vectors[0] + lattice_vectors[1], lattice_vectors[2]);
+			drawCylinder(mesh, cylinder_mesh, 1.0, lattice_vectors[0] + lattice_vectors[2], lattice_vectors[1]);
+			drawCylinder(mesh, cylinder_mesh, 1.0, lattice_vectors[1] + lattice_vectors[2], lattice_vectors[0]);
 		}
 
 		mesh.generateNormals();

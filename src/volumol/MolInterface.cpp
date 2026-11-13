@@ -44,6 +44,7 @@ namespace mol {
 		float pitch = 0.f;
 
 		glm::vec2 mouse_start;
+		float roll_start = 0.0;
 
 		float speed = 10.f;
 
@@ -79,6 +80,15 @@ namespace mol {
 
 					mouse_start = flo::getMousePosition();
 				}
+			}
+			if (flo::getMouseButton(flo::MouseButton::left) & flo::InputType::hit) {
+				roll_start = flo::getMousePosition().x;
+			}
+			else if (flo::getMouseButton(flo::MouseButton::left) & flo::InputType::held) {
+				float angle = 6.283185307f * (flo::getMousePosition().x - roll_start) / (float)fgr::window::width;
+				glm::vec3 cross = glm::cross(direction, up);
+				up = glm::normalize(up * glm::cos(angle) + cross * glm::sin(angle));
+				roll_start = flo::getMousePosition().x;
 			}
 
 			float deltaTime = fgr::window::getDeltaTime();

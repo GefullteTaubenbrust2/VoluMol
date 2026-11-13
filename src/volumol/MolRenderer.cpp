@@ -16,6 +16,7 @@
 namespace mol {
 	CubeMap cubemap;
 	Molecule molecule;
+	glm::vec3 lattice_vectors[3];
 	extern flo::Array<float> normal_modes;
 }
 

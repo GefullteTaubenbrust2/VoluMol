@@ -75,6 +75,10 @@ namespace mol {
 		float arrow_thickness = 0.1;
 		float arrow_length_multiplier = 1.0;
 
+		float unitcell_thickness = 0.05;
+		glm::vec3 unitcell_color;
+		glm::vec2 unitcell_material;
+
 		RenderProperties();
 	};
 

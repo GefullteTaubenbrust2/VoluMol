@@ -43,6 +43,9 @@ class Settings:
     clear_alpha = 1.0
     arrow_thickness = 0.1
     arrow_length_multiplier = 1.0
+    unitcell_thickness = 0.05
+    unitcell_roughness = 0.5
+    unitcell_metallicity = 0.0
 
     ambient_color = (0.4, 0.4, 0.4)
     sun_color = (2., 2., 2.)
@@ -50,6 +53,7 @@ class Settings:
     mo_color_0 = (1., 0.25, 0.)
     mo_color_1 = (0., 0.4, 1.)
     clear_color = (1., 1., 1.)
+    unitcell_color = (1., 1., 1.)
 
     sphere_subdivisions = 3
     cylinder_resolution = 32
@@ -131,6 +135,9 @@ def loadCubeFile(path):
 def loadSDFile(path):
     __library.pyLoadSDFile(path.encode("utf-8"))
 
+def loadVASPFile(path):
+    __library.pyLoadVASPFile(path.encode("utf-8"))
+
 def loadNormalModes(path):
     __library.pyLoadNormalModes(path.encode("utf-8"))
 
@@ -211,7 +218,7 @@ def removeBond(a,b):
     __library.pyRemoveBond(ctypes.c_int(a),ctypes.c_int(b))
 
 def updateSettings(settings):
-    floats = (ctypes.c_float * 23)(
+    floats = (ctypes.c_float * 26)(
         settings.size_factor, 
         settings.bond_thickness, 
         settings.bond_length_tolerance,
@@ -234,7 +241,10 @@ def updateSettings(settings):
         settings.volumetric_gradient,
         settings.clear_alpha,
         settings.arrow_thickness,
-        settings.arrow_length_multiplier
+        settings.arrow_length_multiplier,
+        settings.unitcell_thickness,
+        settings.unitcell_roughness,
+        settings.unitcell_metallicity
     )
 
     vec3s = compressVec3(
@@ -243,7 +253,8 @@ def updateSettings(settings):
         settings.sun_position,
         settings.mo_color_0,
         settings.mo_color_1,
-        settings.clear_color
+        settings.clear_color,
+        settings.unitcell_color
     )
 
     ints = (ctypes.c_int * 7)()

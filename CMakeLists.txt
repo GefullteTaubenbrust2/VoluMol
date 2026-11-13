@@ -76,6 +76,7 @@ target_sources(
 	src/volumol/SDFReader.cpp
 	src/volumol/Settings.cpp
 	src/volumol/TextUtil.cpp
+	src/volumol/VASP.cpp
 	src/volumol/WFXReader.cpp
 	src/volumol/XYZReader.cpp
 )

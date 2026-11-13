@@ -85,8 +85,6 @@ namespace fgr {
 			i += start;
 			indices.push_back(i);
 		}
-
-		update();
 	}
 
 	void Mesh::loadFromOBJ(const std::string& path) {
