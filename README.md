@@ -69,14 +69,18 @@ Controls the functions of the program. Some settings take effect at all times, o
 |`z_far`|`float`| Camera far clipping plane. This essentially controls how far you can see, but very large values decrease depth resolution. |`300.`|
 |`volumetric_gradient`|`float`| Effective only if `volumetric_color_mode = True` and controls the color gradient. Higher values mean the color changes more strongly with increasing function values.|`1.`|
 |`clear_alpha`|`float`| Controls the transparency of the background. It is recommended to use 0 for transparent backgrounds, in which ideally a black `clear_color` is used or 1 for opaque backgrounds.|`1.`|
-|`arrow_thickness`|`float`| Controls the thickness of any arrows to be drawn. |`0.1`|
-|`arrow_length_multiplifer`|`float`| Controls the length of any arrows to be drawn. |`1.0`|
+|`arrow_thickness`|`float`| MMG: Controls the thickness of any arrows to be drawn. |`0.1`|
+|`arrow_length_multiplifer`|`float`| MMG: Controls the length of any arrows to be drawn. |`1.0`|
+|`unitcell_thickness`|`float`| MMG: Controls the thickness of lines drawn to represent a crystal unit cell. |`0.05`|
+|`unitcell_roughness`|`float`| MMG: Roughness of the material with which the unit cell is drawn. |`0.5`|
+|`unitcell_metallicity`|`float`| MMG: Controls how metallic the material of the unit cell is drawn. |`0.5`|
 |`ambient_color`|`tuple`| RGB values for ambient light color. Higher values mean shadows will be weaker. |`(0.4, 0.4, 0.4)`|
 |`sun_color`|`tuple`| RGB values of the sun's color. Values can exceed `1.` due to tone mapping. |`(2., 2., 2.)`|
 |`sun_position`|`tuple`| Vector describing the position of the sun in the "sky". Need not be normalized. |`(2., 1., 1.)`|
 |`mo_color_0`|`tuple`| RGB values for MO colors where function values are positive. |`(1., 0.25, 0.)`|
 |`mo_color_1`|`tuple`| RGB values for MO colors where function values are negative. |`(0., 0.4, 1.)`|
 |`clear_color`|`tuple`| RGB values for the color of the background. This is not subjected to gamma correction and tone mapping like the rest of the scene. Normally, black (`(0, 0, 0)`) or white (`(1, 1, 1)`) backgrounds are sensible. |`(1., 1., 1.)`|
+|`unitcell_color`|`tuple`| MMG: RGB values for the color of the crystal's unit cell. |`(1., 1., 1.)`|
 |`sphere_subdivisions`|`int`| MMG: Controls the quality of spheres for displaying atoms. Normally, the default value doesn't cause performance problems but it could for very large molecules. |`3`|
 |`cylinder_resolution`|`int`| MMG: Controls the quality of cylinders for displaying bonds. Normally, the default value doesn't cause performance problems but it could for very large molecules. |`32`|
 |`volumetric_iterations`|`int`| Controls the number of raycasting steps for volumetrics. This is the main variable that impacts visual quality and performance of volumetrics. |`100`|
@@ -151,6 +155,9 @@ Loads a XYZ file and disables previous isosurfaces/volumetrics.
 Loads a SD file and disables previous isosurfaces/volumetrics. Note that this is the only format that supports multiple bonds. For files with multiple molecules, only the first will be loaded.
 - `path` Relative path to the file including its name.
 
+### `loadVASPFile(path)`
+Loads a VASP file (POSCAR/CONTCAR) and disables previous isosurfaces/volumetrics.
+- `path` Relative path to the file including its name.
 
 ### `loadCubeFile(path)`
 Loads a Gaussian cube file and disables previous isosurfaces/volumetrics. The present volumetric data can be visualized directly using `setIsosurface()` and/or `setVolumetric()`.
@@ -234,12 +241,12 @@ Use a previously generated cubemap to render a volumetric representation.
 Draw arrows representing the `mode`-th normal mode. For instance, 6 would ordinarily be the lowest-frequency mode of most molecules.
 
 
-### `setCameraOrientation(position, direction)`
-Position the camera at `position` and point it towards `direction`.
+### `setCameraOrientation(position, direction, up)`
+Position the camera at `position` and point it towards `direction`, with the screen's Y-axis pointed along `up`.
 
 
 ### `getCameraOrientation()`
-Returns two tuples, the first being the cameras position, the second being the direction it is pointing.
+Returns three tuples, the first being the cameras position, the second being the direction it is pointing. The third gives the 'up direction', that is, where the Y-axis of your screen will be pointed in world space.
 
 
 ### `setElementProperties(Z, color, roughness, metallicity)`
@@ -259,7 +266,7 @@ Use a `Settings` object to update the program's settings.
 
 
 ### `launchInterface()`
-Start an interactive interface to inspect your molecules. `WASD` for movement, `Left Shift` to fly up, `Ctrl` to fly down, right mouse button to turn the camera.
+Start an interactive interface to inspect your molecules. `WASD` for movement, `Left Shift` to fly up, `Ctrl` to fly down, right mouse button to turn the camera. The left mouse button can be used to control the camera's roll.
 
 
 ### `saveImage(path, width, height)`
